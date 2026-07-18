@@ -1,10 +1,21 @@
 # Code Clock
 
-Ambient, hands-free agent for resuscitations (code blue): listens to the live
-transcript, extracts the clinical timeline as it happens, reasons against the
-ACLS protocol clock in deterministic code, and fires source-linked guidance.
-Every logged event traces to the exact utterance that produced it; every prompt
-traces to the triggering events and the protocol rule that fired.
+Ambient, hands-free agent for resuscitations (code blue / code stroke): it
+listens to the room, extracts the clinical timeline as it happens, reasons
+against the protocol clock in deterministic code, and fires source-linked
+guidance in real time. Every logged event traces to the exact utterance that
+produced it; every prompt traces to the triggering events and the protocol
+rule that fired. Built at the Abridge hackathon; everything in this repo was
+built at the event.
+
+**Validated on real audio:** run through actual public body-cam footage of a
+2023 cardiac arrest (local Whisper ASR -> extraction -> protocol engine), the
+agent picked up the crew's PEA call, logged "300 amio" as amiodarone 300 mg,
+tracked their counted pulse checks against the 2-minute clock, surfaced
+"epinephrine due — none given, 3:00 into the code" while no epi had been
+verbalized, and caught ROSC from "yeah, pulse." The footage itself is not
+included in this repo (third-party content) — drop any 16 kHz mono WAV at
+`data/audio/bodycam.wav` and use the "LIVE — real body-cam clip" option.
 
 ## Architecture
 

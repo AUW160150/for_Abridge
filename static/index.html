@@ -131,6 +131,7 @@
       <option value="arrest" selected>Cardiac arrest (replay)</option>
       <option value="stroke">Stroke → arrest (replay)</option>
       <option value="live-file">● LIVE — demo audio</option>
+      <option value="live-bodycam">● LIVE — real body-cam clip</option>
       <option value="live-mic">● LIVE — microphone</option>
     </select>
     <label class="hint" style="display:flex;align-items:center;gap:4px">
@@ -290,9 +291,10 @@ $("start").onclick = () => {
   const live = scen.startsWith("live");
   $("asrbar").style.display = live ? "block" : "none";
   $("asrtext").textContent = "—";
+  const audio = scen === "live-bodycam" ? "bodycam" : "transcript_x3";
   const url = live
     ? `/api/stream?scenario=live&source=${scen === "live-mic" ? "mic" : "file"}` +
-      `&audio=transcript_x3&speak=${$("speak").checked ? 1 : 0}` +
+      `&audio=${audio}&speak=${$("speak").checked ? 1 : 0}` +
       `&listen=${$("listen").checked ? 1 : 0}`
     : `/api/stream?speed=${$("speed").value}&scenario=${scen}`;
   source = new EventSource(url);

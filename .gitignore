@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
+data/private/
+data/audio/bodycam*.wav
+data/live_sessions/

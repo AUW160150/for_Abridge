@@ -107,9 +107,13 @@ class LiveSession:
                     raw = np.frombuffer(f.readframes(frames), dtype=np.int16)
                     t = pos / SAMPLE_RATE
                     # pace to real time: don't get ahead of the recording
-                    ahead = t - (time.monotonic() - start_wall)
-                    if ahead > 0:
-                        time.sleep(ahead)
+                    # (CODECLOCK_LIVE_FAST=1 skips pacing for offline verification)
+                    import os
+
+                    if not os.environ.get("CODECLOCK_LIVE_FAST"):
+                        ahead = t - (time.monotonic() - start_wall)
+                        if ahead > 0:
+                            time.sleep(ahead)
                     yield t, raw.astype(np.float32) / 32768.0
                     pos += frames
 
