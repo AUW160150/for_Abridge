@@ -9,6 +9,7 @@ and never in the LLM.
 from .models import ProtocolRule
 
 _AHA_ACLS = "AHA 2020 Adult Cardiac Arrest Algorithm (verify with clinicians before demo)"
+_AHA_STROKE = "AHA/ASA 2019 Acute Ischemic Stroke Guidelines — door-to-needle <=60 min (verify with clinicians before demo)"
 
 RULES: dict[str, ProtocolRule] = {
     r.id: r
@@ -47,6 +48,31 @@ RULES: dict[str, ProtocolRule] = {
             id="acls_amiodarone_max",
             description="Amiodarone cumulative dose ceiling 450 mg (300 + 150).",
             guideline_source=_AHA_ACLS,
+        ),
+        ProtocolRule(
+            id="stroke_door_to_ct",
+            description="Non-contrast head CT within 25 minutes of arrival (door-to-CT).",
+            guideline_source=_AHA_STROKE,
+        ),
+        ProtocolRule(
+            id="stroke_door_to_needle",
+            description="Thrombolytic within 60 minutes of arrival (door-to-needle).",
+            guideline_source=_AHA_STROKE,
+        ),
+        ProtocolRule(
+            id="stroke_lkw_documented",
+            description="Last-known-well time must be established — it anchors the thrombolytic window.",
+            guideline_source=_AHA_STROKE,
+        ),
+        ProtocolRule(
+            id="stroke_tpa_window",
+            description="Thrombolytic window: within 4.5 h of last known well; verify before administration.",
+            guideline_source=_AHA_STROKE,
+        ),
+        ProtocolRule(
+            id="stroke_clock_hold",
+            description="Stroke workflow held/resumed around an intervening cardiac arrest.",
+            guideline_source=_AHA_STROKE,
         ),
     ]
 }

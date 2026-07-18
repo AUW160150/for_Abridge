@@ -1,0 +1,45 @@
+{
+  "code_start": "2026-07-18T18:19:58",
+  "events": [
+    {
+      "id": "evt_b499e6bf",
+      "timestamp": "2026-07-18T18:19:58",
+      "type": "milestone",
+      "entity": "code start",
+      "dose": null,
+      "value": null,
+      "source_utterance": "CODE LEADER: Code blue, bed twelve. She's pulseless \u2014 compressions started.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_34ba904f",
+      "timestamp": "2026-07-18T18:19:58",
+      "type": "procedure",
+      "entity": "chest compressions",
+      "dose": null,
+      "value": null,
+      "source_utterance": "CODE LEADER: Code blue, bed twelve. She's pulseless \u2014 compressions started.",
+      "confidence": 0.9
+    },
+    {
+      "id": "evt_2a0e9eef",
+      "timestamp": "2026-07-18T18:21:56",
+      "type": "rhythm_check",
+      "entity": "PEA",
+      "dose": null,
+      "value": null,
+      "source_utterance": "CODE LEADER: Hold compressions, rhythm check \u2014 that's PEA. Back on the chest.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_b6d6808a",
+      "timestamp": "2026-07-18T18:22:33",
+      "type": "medication",
+      "entity": "epinephrine",
+      "dose": "1 mg",
+      "value": null,
+      "source_utterance": "NURSE 1: Copy, that epi is in.",
+      "confidence": 0.9
+    }
+  ]
+}

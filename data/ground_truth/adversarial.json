@@ -1,0 +1,29 @@
+{
+  "name": "adversarial",
+  "transcript": "data/transcript_adversarial.txt",
+  "cache": "data/events_adversarial.json",
+  "events": [
+    {"t": "00:00", "type": "milestone", "entity_any": ["code start", "code blue"]},
+    {"t": "00:00", "type": "procedure", "entity_any": ["cpr", "compressions", "chest compressions"]},
+    {"t": "01:58", "type": "rhythm_check", "entity_any": ["pea", "pulseless electrical activity"]},
+    {"t": "02:20", "type": "medication", "entity_any": ["epinephrine", "epi"], "dose": "1 mg"}
+  ],
+  "optional_events": [
+    {"t": "00:00", "type": "assessment", "entity_any": ["pulseless", "no pulse"]}
+  ],
+  "forbidden_events": [
+    {"type": "medication", "entity_any": ["epinephrine", "epi"], "t_window": ["00:15", "01:00"], "note": "drawn up + explicitly held"},
+    {"type": "medication", "entity_any": ["epinephrine", "epi"], "t_window": ["02:30", "03:20"], "note": "confirmation echo of the 02:20 dose"},
+    {"type": "medication", "entity_any": ["amiodarone"], "note": "home medication, never given"},
+    {"type": "shock", "note": "hypothetical and declined — no shock ever delivered"},
+    {"type": "rhythm_check", "entity_any": ["v-fib", "vf"], "note": "hypothetical rhythm"}
+  ],
+  "expected_guidance": [],
+  "forbidden_guidance": [
+    {"rule_id": "acls_epi_duplicate"},
+    {"rule_id": "acls_shock_rhythm_mismatch"},
+    {"rule_id": "acls_shock_shockable"},
+    {"rule_id": "acls_amiodarone_refractory"},
+    {"rule_id": "acls_amiodarone_max"}
+  ]
+}

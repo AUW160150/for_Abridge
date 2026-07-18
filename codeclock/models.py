@@ -39,6 +39,8 @@ class ClinicalEvent:
     source_utterance: str        # exact spoken text this came from (traceability)
     confidence: float            # 0-1 self-eval; low values get flagged to the human
     dose: str | None = None      # e.g. "1 mg"
+    value: str | None = None     # stated measurement/time, e.g. NIHSS "11",
+                                 # last-known-well "09:30", code-start clock "14:32"
     id: str = field(default_factory=lambda: _new_id("evt"))
 
     def elapsed_str(self, code_start: datetime) -> str:
@@ -55,7 +57,19 @@ class Guidance:
     triggering_event_ids: list[str]   # which events caused this (traceability)
     rule_id: str                 # which protocol rule fired (traceability)
     issued_at: datetime
+    rubric_id: str = ""          # which protocol rubric this belongs to (traceability)
     id: str = field(default_factory=lambda: _new_id("gd"))
+
+
+@dataclass
+class RubricActivation:
+    """Provenance record: which rubric became active, when, and on what evidence."""
+
+    rubric_id: str               # e.g. "acls_cardiac_arrest", "stroke_code"
+    activated_at: datetime
+    triggering_event_ids: list[str]   # the events whose evidence activated it
+    reason: str                  # the matched evidence, human-readable
+    id: str = field(default_factory=lambda: _new_id("rub"))
 
 
 @dataclass

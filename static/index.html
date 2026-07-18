@@ -94,6 +94,15 @@
   .item.resolved { opacity: .35; }
   .item.resolved .g-msg { text-decoration: line-through; }
 
+  #rubrics { display: flex; gap: 6px; }
+  .rubric-pill {
+    padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    background: #0d2233; color: #67e8f9; border: 1px solid #155e75;
+  }
+  .rubric-item { border-left: 4px solid #67e8f9; background: #0d1b24; }
+  .rubric-item .g-msg { color: #67e8f9; }
+
   #recordwrap { display: none; border-top: 1px solid var(--line); background: var(--panel); padding: 12px 18px; max-height: 38vh; overflow-y: auto; }
   #recordwrap h2 { font-size: 11px; letter-spacing: .14em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
   #record { font-size: 12.5px; white-space: pre; }
@@ -106,12 +115,18 @@
     <h1>CODE <span>CLOCK</span></h1>
     <div id="clock" class="mono">00:00</div>
     <div id="status" class="pill idle">standby</div>
+    <div id="rubrics"></div>
     <div class="spacer"></div>
     <span class="hint">click any event or prompt to reveal its source</span>
+    <select id="scenario">
+      <option value="arrest" selected>Cardiac arrest</option>
+      <option value="stroke">Stroke → arrest</option>
+    </select>
     <select id="speed">
       <option value="2">2× speed</option>
       <option value="8" selected>8× speed</option>
       <option value="20">20× speed</option>
+      <option value="60">60× speed</option>
     </select>
     <button id="start">▶ Start code</button>
   </header>
@@ -172,6 +187,29 @@ function addEvent(e) {
   append("timeline", el);
 }
 
+function addRubric(r) {
+  const pill = document.createElement("span");
+  pill.className = "rubric-pill";
+  pill.textContent = r.name;
+  $("rubrics").appendChild(pill);
+
+  const triggers = r.trigger_ids.map(id => events[id]).filter(Boolean);
+  const el = document.createElement("div");
+  el.className = "item g-item rubric-item"; el.id = r.id;
+  el.innerHTML = `
+    <div class="row">
+      <span class="stamp mono">${mmss(r.t)}</span>
+      <span class="g-msg">◆ RUBRIC ACTIVATED — ${r.name}</span>
+    </div>
+    <div class="details">
+      <div class="label">evidence</div>
+      <div>${r.reason}</div>
+      ${triggers.map(t => `<div class="quote">[${mmss(t.t)}] “${t.source}”</div>`).join("")}
+    </div>`;
+  el.onclick = () => el.classList.toggle("open");
+  append("guidance", el);
+}
+
 function addGuidance(g) {
   const el = document.createElement("div");
   el.className = `item g-item ${g.urgency}`; el.id = g.id;
@@ -183,6 +221,8 @@ function addGuidance(g) {
       <span class="g-msg">${g.message}</span>
     </div>
     <div class="details">
+      <div class="label">rubric</div>
+      <div>${g.rubric_name || "-"}</div>
       <div class="label">why — protocol rule</div>
       <div><span class="mono">${g.rule_id}</span> — ${g.rule_desc}</div>
       <div class="label">guideline</div>
@@ -222,16 +262,19 @@ $("download").onclick = () => {
 $("start").onclick = () => {
   source?.close();
   $("timeline").innerHTML = ""; $("guidance").innerHTML = "";
+  $("rubrics").innerHTML = "";
   $("recordwrap").style.display = "none";
   for (const k in events) delete events[k];
   $("status").className = "pill live"; $("status").textContent = "● live";
   $("start").textContent = "↻ Restart";
 
-  source = new EventSource(`/api/stream?speed=${$("speed").value}`);
+  source = new EventSource(
+    `/api/stream?speed=${$("speed").value}&scenario=${$("scenario").value}`);
   source.onmessage = msg => {
     const d = JSON.parse(msg.data);
     if (d.kind === "tick") $("clock").textContent = mmss(d.t);
     else if (d.kind === "event") addEvent(d.event);
+    else if (d.kind === "rubric") addRubric(d.rubric);
     else if (d.kind === "guidance") addGuidance(d.guidance);
     else if (d.kind === "resolve") d.ids.forEach(id => $(id)?.classList.add("resolved"));
     else if (d.kind === "status" && d.status === "rosc") {

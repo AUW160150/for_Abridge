@@ -1,0 +1,53 @@
+{
+  "name": "stroke_arrest",
+  "transcript": "data/transcript_stroke.txt",
+  "cache": "data/events_stroke.json",
+  "events": [
+    {"t": "00:00", "type": "milestone", "entity_any": ["code stroke", "stroke"], "value": "10:05"},
+    {"t": "00:45", "type": "assessment", "entity_any": ["last known well", "lkw"], "value": "09:30"},
+    {"t": "02:30", "type": "assessment", "entity_any": ["nihss"], "value": "11"},
+    {"t": "18:30", "type": "procedure", "entity_any": ["ct", "ct head", "head ct"]},
+    {"t": "21:00", "type": "assessment", "entity_any": ["ct no hemorrhage", "no hemorrhage", "no bleed", "ct negative"]},
+    {"t": "24:10", "type_any": ["assessment", "milestone"], "entity_any": ["pulseless", "no pulse", "cardiac arrest"]},
+    {"t": "24:20", "type": "milestone", "entity_any": ["code start", "code blue"]},
+    {"t": "26:15", "type": "rhythm_check", "entity_any": ["pea", "pulseless electrical activity"]},
+    {"t": "26:40", "type": "medication", "entity_any": ["epinephrine", "epi"], "dose": "1 mg"},
+    {"t": "28:20", "type": "rhythm_check", "entity_any": ["pea", "pulseless electrical activity"]},
+    {"t": "30:45", "type": "medication", "entity_any": ["epinephrine", "epi"], "dose": "1 mg"},
+    {"t": "32:10", "type": "milestone", "entity_any": ["rosc"]},
+    {"t": "41:20", "type": "medication", "entity_any": ["tenecteplase", "tnk"], "dose": "25 mg"}
+  ],
+  "optional_events": [
+    {"t": "03:10", "type": "assessment", "entity_any": ["glucose"], "value": "122"},
+    {"t": "24:20", "type": "procedure", "entity_any": ["cpr", "compressions", "chest compressions"]},
+    {"t": "32:10", "type": "rhythm_check", "entity_any": ["organized", "organized rhythm"]},
+    {"t": "33:00", "type": "assessment", "entity_any": ["airway", "pressure", "stable"]}
+  ],
+  "forbidden_events": [
+    {"type": "medication", "entity_any": ["tenecteplase", "tnk", "tpa", "alteplase"], "t_window": ["20:30", "22:30"], "note": "'mix the tenecteplase' is preparation, not administration"},
+    {"type": "procedure", "entity_any": ["ct", "scanner"], "t_window": ["03:30", "17:00"], "note": "'I want her in the scanner' is an order, CT not yet done"},
+    {"type": "shock"}
+  ],
+  "expected_guidance": [
+    {"rule_id": "stroke_door_to_ct", "urgency": "due_soon", "t_window": ["14:58", "15:05"]},
+    {"rule_id": "stroke_clock_hold", "urgency": "info", "t_window": ["24:08", "24:25"]},
+    {"rule_id": "acls_rhythm_check_interval", "urgency": "due_now", "t_window": ["28:10", "28:20"]},
+    {"rule_id": "acls_epi_interval", "urgency": "due_now", "t_window": ["29:38", "29:45"]},
+    {"rule_id": "stroke_clock_hold", "urgency": "due_now", "t_window": ["32:08", "32:15"]},
+    {"rule_id": "stroke_door_to_needle", "urgency": "due_soon", "t_window": ["32:08", "33:10"]},
+    {"rule_id": "stroke_door_to_needle", "urgency": "info", "t_window": ["41:18", "41:25"]},
+    {"rule_id": "stroke_tpa_window", "urgency": "info", "t_window": ["41:18", "41:25"]}
+  ],
+  "forbidden_guidance": [
+    {"rule_id": "acls_shock_shockable"},
+    {"rule_id": "acls_shock_rhythm_mismatch"},
+    {"rule_id": "acls_epi_duplicate"},
+    {"rule_id": "stroke_tpa_window", "urgency": "alert"},
+    {"rule_id": "stroke_lkw_documented"},
+    {"rule_id": "stroke_door_to_needle", "urgency": "alert"}
+  ],
+  "expected_rubrics": [
+    {"rubric_id": "stroke_code", "t_window": ["00:00", "00:10"]},
+    {"rubric_id": "acls_cardiac_arrest", "t_window": ["24:08", "24:25"]}
+  ]
+}

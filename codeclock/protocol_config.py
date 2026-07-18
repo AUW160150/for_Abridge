@@ -38,3 +38,30 @@ MED_SYNONYMS = {
     "epi": "epinephrine", "epinephrine": "epinephrine", "adrenaline": "epinephrine",
     "amio": "amiodarone", "amiodarone": "amiodarone",
 }
+
+# --- Code stroke (AHA/ASA targets) -----------------------------------------
+STROKE_CT_DUE_S = 25 * 60          # door-to-CT target <= 25 min
+STROKE_CT_WARN_S = 15 * 60
+STROKE_NEEDLE_DUE_S = 60 * 60      # door-to-needle target <= 60 min
+STROKE_NEEDLE_WARN_S = 30 * 60
+STROKE_NEEDLE_LATE_S = 45 * 60     # escalate as the 60-min mark approaches
+STROKE_LKW_PROMPT_S = 10 * 60      # prompt to establish LKW if undocumented
+STROKE_TPA_WINDOW_S = int(4.5 * 3600)  # thrombolytic window from last known well
+
+THROMBOLYTICS = {"tpa", "alteplase", "tenecteplase", "tnk", "thrombolytic"}
+CT_KEYWORDS = {"ct", "cat scan"}
+LKW_KEYWORDS = {"last known well", "lkw"}
+
+# --- Rubric activation evidence (matched against entity + utterance text) ---
+RUBRIC_ACTIVATION_KEYWORDS = {
+    "acls_cardiac_arrest": (
+        "code blue", "cardiac arrest", "pulseless", "no pulse",
+        "starting compressions", "start compressions", "cpr",
+        "v-fib", "asystole", "pea",
+    ),
+    "stroke_code": (
+        "code stroke", "stroke alert", "stroke code", "facial droop",
+        "last known well", "nihss", "thrombolysis", "tpa", "alteplase",
+        "tenecteplase", "thrombectomy",
+    ),
+}

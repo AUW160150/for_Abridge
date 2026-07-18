@@ -1,0 +1,16 @@
+# Adversarial / boundary transcript (Abridge-style boundary eval).
+# Nearly every line is a trap the extractor must NOT log: drugs drawn up but
+# not given, explicit holds, hypotheticals, home medications, and questions.
+# Ground truth contains only FOUR loggable events: code start, CPR,
+# the PEA rhythm check, and one epinephrine dose.
+
+[00:00] CODE LEADER: Code blue, bed twelve. She's pulseless — compressions started.
+[00:20] NURSE 1: Epi is drawn up and ready whenever you want it.
+[00:45] CODE LEADER: Hold the epi for now, let's get a rhythm first.
+[01:10] CODE LEADER: If she goes into v-fib we'll shock her at two hundred.
+[01:30] NURSE 2: Husband says she takes amiodarone at home for her arrhythmia.
+[01:58] CODE LEADER: Hold compressions, rhythm check — that's PEA. Back on the chest.
+[02:20] CODE LEADER: Okay, now push the epi — one milligram.
+[02:35] NURSE 1: Copy, that epi is in.
+[02:50] NURSE 2: Should we shock her? CODE LEADER: No — PEA is not shockable, no shock.
+[03:15] NURSE 1: Do you want the second epi drawn up?

@@ -1,0 +1,24 @@
+# Scripted code-stroke transcript (~42 min, realistic stroke-clock timescale).
+# The stretch case: a code stroke that arrests mid-workup — the ACLS rubric
+# activates in parallel, the stroke clock holds, ROSC releases it, and the
+# thrombolytic lands inside both the 60-min door-to-needle target and the
+# 4.5 h LKW window.
+# Seeded traps: "mix the tenecteplase" (drawn up, not given) must NOT log.
+# TODO before demo: sanity-check timings with clinicians on the floor.
+
+[00:00] CHARGE NURSE: Code stroke, ED bay three — time is ten oh five. Sixty-eight-year-old with sudden right-sided weakness and slurred speech.
+[00:45] NURSE 1: Family says she was last known well at nine thirty this morning.
+[02:30] PHYSICIAN: NIHSS is eleven.
+[03:10] NURSE 2: Glucose is one twenty-two.
+[04:00] PHYSICIAN: Let's move — I want her in the scanner now.
+[18:30] CT TECH: Non-contrast head CT is done, images are coming up.
+[21:00] PHYSICIAN: CT shows no hemorrhage. She's a thrombolysis candidate — get consent and mix the tenecteplase.
+[24:10] NURSE 1: She's not responding... I can't feel a pulse — she's pulseless!
+[24:20] PHYSICIAN: Code blue — start compressions now.
+[26:15] PHYSICIAN: Hold compressions, rhythm check — that's PEA. No shock, back on the chest.
+[26:40] NURSE 2: Epi one milligram is in.
+[28:20] PHYSICIAN: Rhythm check — still PEA. Continue compressions.
+[30:45] NURSE 2: Second epi, one milligram is in.
+[32:10] PHYSICIAN: Rhythm check — we've got a rhythm... and a pulse. ROSC, time is ten thirty-seven.
+[33:00] PHYSICIAN: She's protecting her airway and pressure is holding. Stroke clock is still running — reassess for thrombolysis.
+[41:20] NURSE 1: Tenecteplase bolus is in, twenty-five milligrams.

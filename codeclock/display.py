@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from .models import ClinicalEvent, Guidance
+from .models import ClinicalEvent, Guidance, RubricActivation
 from .rules import RULES
 
 LOW_CONFIDENCE_THRESHOLD = 0.75
@@ -63,10 +63,11 @@ def format_guidance(guidance: Guidance, code_start: datetime) -> str:
     events = ", ".join(guidance.triggering_event_ids) or "-"
     rule = RULES.get(guidance.rule_id)
     source = rule.guideline_source if rule else "unknown rule"
+    rubric = f"rubric: {guidance.rubric_id} · " if guidance.rubric_id else ""
     return "\n".join(
         [
             f"[{stamp}]   {color}▶ {guidance.urgency.upper()}: {guidance.message}{_RESET}",
-            f"           {_DIM}rule: {guidance.rule_id} · events: {events}{_RESET}",
+            f"           {_DIM}{rubric}rule: {guidance.rule_id} · events: {events}{_RESET}",
             f"           {_DIM}per: {source}{_RESET}",
         ]
     )
@@ -74,3 +75,12 @@ def format_guidance(guidance: Guidance, code_start: datetime) -> str:
 
 def print_guidance(guidance: Guidance, code_start: datetime) -> None:
     print(format_guidance(guidance, code_start))
+
+
+def print_activation(activation: RubricActivation, code_start: datetime) -> None:
+    total = int((activation.activated_at - code_start).total_seconds())
+    stamp = f"{total // 60:02d}:{total % 60:02d}"
+    print(
+        f"[{stamp}]   \033[1;96m◆ RUBRIC ACTIVATED: {activation.rubric_id}{_RESET}\n"
+        f"           {_DIM}{activation.reason}{_RESET}"
+    )

@@ -48,6 +48,57 @@ The scripted transcript (`data/transcript.txt`) seeds one deliberate protocol
 deviation — epi #2 given 5:10 after epi #1, outside the ACLS 3-5 min window —
 which the protocol engine (Phase 2) will catch for the hero demo beat.
 
+## Multiple rubrics, one router (Phase 5)
+
+Different ER codes run different protocol clocks. A deterministic
+`ProtocolRouter` (`codeclock/rubrics.py`) decides which rubric(s) apply —
+never the LLM. Activation is evidence-based keyword matching in plain code,
+and every activation is a `RubricActivation` record carrying the triggering
+event and the exact evidence matched, so "why is this protocol running?" is
+always answerable. Rubrics run in parallel when reality demands it: a code
+stroke that arrests mid-workup activates the ACLS rubric alongside, holds
+the stroke prompts, and resumes them at ROSC — each transition logged with
+provenance (`python run_pipeline.py --stroke`, or the "Stroke → arrest"
+scenario in the live view).
+
+## Evaluation (Phase 5)
+
+`python run_eval.py` runs offline evals modeled on how clinical AI is
+evaluated for enterprise readiness (cf. Abridge's published approach:
+clinical accuracy vs physician rubrics, boundary/adversarial testing,
+clinical safety screens, staged rollout):
+
+1. **Clinical accuracy** — extraction vs labeled ground truth
+   (`data/ground_truth/`): precision / recall / F1, timestamp error, dose and
+   value accuracy, confidence calibration by bucket.
+2. **Boundary / adversarial** — `data/transcript_adversarial.txt` is nearly
+   all traps (negations, holds, hypotheticals, home meds, drawn-up-not-given);
+   logging any of them is a critical false positive.
+3. **Guidance safety** — deterministic replay must fire every expected prompt
+   in its time window and must never fire forbidden prompts (e.g.
+   shock-on-PEA); rubric activations are asserted too.
+4. **Provenance integrity, checked on every record** — each event's utterance
+   must appear verbatim in the transcript; each guidance must chain to
+   resolvable event ids and a registered rule. Provenance is the trust layer,
+   so it is a gate, not a sampled metric.
+
+Reports land in `eval/report.md` + `eval/report.json`. Current status: all
+three scenarios pass every check (P/R/F1 = 1.0, 0 critical FPs, 8/8 expected
+prompts per clinical scenario, 100% provenance). Ground truth is authored
+with the transcripts and pending clinician review — the harness is built for
+the sponsor's `synthetic-ambient-fhir-25` dataset to be dropped in as a
+fourth scenario once available.
+
+## Privacy posture
+
+All data in this repo is synthetic — no PHI anywhere. For any real
+deployment: transcript chunks are PHI and require a BAA + zero/limited data
+retention with the model provider, on-prem or in-VPC ASR, PHI minimization
+before the LLM boundary (the deterministic engine never needs identifiers),
+and audit logging — the provenance chain doubles as the audit trail.
+The eval harness runs entirely offline against cached extractions, so
+benchmarking never re-sends data.
+
 ## Principles
 
 - Hands-free: no taps, ever.

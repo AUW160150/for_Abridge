@@ -17,14 +17,21 @@ from datetime import timedelta
 
 from flask import Flask, Response, request, send_from_directory
 
-from codeclock.models import ClinicalEvent, Guidance
-from codeclock.reasoner import Reasoner
+from pathlib import Path
+
+from codeclock.models import ClinicalEvent, Guidance, RubricActivation
+from codeclock.rubrics import RUBRIC_NAMES, ProtocolRouter
 from codeclock.rules import RULES
 from run_pipeline import load_or_extract
 
 app = Flask(__name__, static_folder="static")
 
 PORT = 5057
+
+SCENARIOS = {
+    "arrest": (Path("data/transcript.txt"), Path("data/events.json")),
+    "stroke": (Path("data/transcript_stroke.txt"), Path("data/events_stroke.json")),
+}
 
 
 @app.route("/")
@@ -61,6 +68,8 @@ def _guidance_msg(g: Guidance, t: float) -> dict:
             "urgency": g.urgency,
             "message": g.message,
             "rule_id": g.rule_id,
+            "rubric_id": g.rubric_id,
+            "rubric_name": RUBRIC_NAMES.get(g.rubric_id, g.rubric_id),
             "rule_desc": rule.description if rule else "",
             "rule_source": rule.guideline_source if rule else "",
             "trigger_ids": g.triggering_event_ids,
@@ -68,11 +77,26 @@ def _guidance_msg(g: Guidance, t: float) -> dict:
     }
 
 
-def _resolution_prefixes(e: ClinicalEvent, reasoner: Reasoner) -> list[str]:
+def _rubric_msg(a: RubricActivation, t: float) -> dict:
+    return {
+        "kind": "rubric",
+        "rubric": {
+            "id": a.id,
+            "t": t,
+            "rubric_id": a.rubric_id,
+            "name": RUBRIC_NAMES.get(a.rubric_id, a.rubric_id),
+            "reason": a.reason,
+            "trigger_ids": a.triggering_event_ids,
+        },
+    }
+
+
+def _resolution_prefixes(e: ClinicalEvent, router: ProtocolRouter) -> list[str]:
     """Which guidance-key prefixes this event satisfies (display concern only)."""
     if e.type == "rhythm_check":
         prefixes = ["rhythm_check:"]
-        if reasoner.engine.pending_shock_for is None:
+        acls = router.rubrics.get("acls_cardiac_arrest")
+        if acls and acls.engine.pending_shock_for is None:
             prefixes.append("shock:")
         return prefixes
     if e.type == "shock":
@@ -83,19 +107,30 @@ def _resolution_prefixes(e: ClinicalEvent, reasoner: Reasoner) -> list[str]:
             return ["epi:"]
         if "amio" in entity:
             return ["amio:"]
+        if any(k in entity for k in ("tenecteplase", "tnk", "tpa", "alteplase")):
+            return ["stroke_needle", "stroke_ct", "stroke_lkw"]
+    if e.type in ("procedure", "assessment"):
+        entity = e.entity.lower()
+        if "ct" in entity.split() or entity.startswith("ct"):
+            return ["stroke_ct"]
+        if "last known well" in entity or "lkw" in entity:
+            return ["stroke_lkw"]
     if e.type == "milestone" and "rosc" in e.entity.lower():
-        return [""]  # ROSC satisfies every open (non-alert) prompt
+        # ROSC satisfies the open ACLS prompts; stroke prompts resume separately
+        return ["rhythm_check:", "epi:", "amio:", "shock:"]
     return []
 
 
 @app.route("/api/stream")
 def stream():
     speed = max(0.5, min(60.0, float(request.args.get("speed", 8))))
+    scenario = request.args.get("scenario", "arrest")
+    transcript, cache = SCENARIOS.get(scenario, SCENARIOS["arrest"])
 
     def generate():
-        events, code_start = load_or_extract()
+        events, code_start = load_or_extract(transcript, cache)
         events.sort(key=lambda e: e.timestamp)
-        reasoner = Reasoner()
+        router = ProtocolRouter()
         resolved: set[str] = set()
 
         def elapsed(ts) -> float:
@@ -103,13 +138,13 @@ def stream():
 
         def resolutions(e: ClinicalEvent) -> list[str]:
             ids = []
-            for gid, key in reasoner.key_for.items():
+            for gid, key in router.key_for.items():
                 if gid in resolved:
                     continue
-                g = next(x for x in reasoner.guidance_log if x.id == gid)
+                g = next(x for x in router.guidance_log if x.id == gid)
                 if g.urgency == "alert":
                     continue  # alerts stay pinned — they're part of the record
-                if any(key.startswith(p) for p in _resolution_prefixes(e, reasoner)):
+                if any(key.startswith(p) for p in _resolution_prefixes(e, router)):
                     resolved.add(gid)
                     ids.append(gid)
             return ids
@@ -123,20 +158,23 @@ def stream():
             while pending and pending[0].timestamp <= now:
                 e = pending.pop(0)
                 yield _sse(_event_msg(e, elapsed(e.timestamp)))
-                for g in reasoner.on_event(e):
+                activations, guidance = router.on_event(e)
+                for a in activations:
+                    yield _sse(_rubric_msg(a, elapsed(e.timestamp)))
+                for g in guidance:
                     yield _sse(_guidance_msg(g, elapsed(e.timestamp)))
                 ids = resolutions(e)
                 if ids:
                     yield _sse({"kind": "resolve", "ids": ids})
                 if e.type == "milestone" and "rosc" in e.entity.lower():
                     yield _sse({"kind": "status", "status": "rosc"})
-            for g in reasoner.on_tick(now):
+            for g in router.on_tick(now):
                 yield _sse(_guidance_msg(g, t))
             yield _sse({"kind": "tick", "t": t})
             time.sleep(1.0 / speed)
             t += 1
 
-        alerts = [g for g in reasoner.guidance_log if g.urgency == "alert"]
+        alerts = [g for g in router.guidance_log if g.urgency == "alert"]
         yield _sse(
             {
                 "kind": "record",
@@ -156,7 +194,7 @@ def stream():
                         if e.type == "medication" and "epi" in e.entity.lower()
                     ),
                     "shocks": sum(1 for e in events if e.type == "shock"),
-                    "guidance": len(reasoner.guidance_log),
+                    "guidance": len(router.guidance_log),
                     "alerts": len(alerts),
                 },
                 "alerts": [{"message": g.message, "rule_id": g.rule_id} for g in alerts],

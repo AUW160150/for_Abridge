@@ -1,0 +1,50 @@
+{
+  "name": "arrest",
+  "transcript": "data/transcript.txt",
+  "cache": "data/events.json",
+  "events": [
+    {"t": "00:00", "type": "milestone", "entity_any": ["code start", "code blue"], "value": "14:32"},
+    {"t": "00:00", "type": "procedure", "entity_any": ["cpr", "compressions", "chest compressions"]},
+    {"t": "00:40", "type": "procedure", "entity_any": ["iv access", "iv"]},
+    {"t": "02:03", "type": "rhythm_check", "entity_any": ["v-fib", "vf", "ventricular fibrillation"]},
+    {"t": "02:17", "type": "shock", "entity_any": ["defibrillation", "shock"]},
+    {"t": "02:45", "type": "medication", "entity_any": ["epinephrine", "epi"], "dose": "1 mg"},
+    {"t": "03:58", "type": "rhythm_check", "entity_any": ["v-fib", "vf", "ventricular fibrillation"]},
+    {"t": "04:09", "type": "shock", "entity_any": ["defibrillation", "shock"]},
+    {"t": "04:41", "type": "medication", "entity_any": ["amiodarone"], "dose": "300 mg"},
+    {"t": "05:58", "type": "rhythm_check", "entity_any": ["asystole"]},
+    {"t": "06:45", "type": "procedure", "entity_any": ["intubation", "endotracheal", "airway", "tube"]},
+    {"t": "07:55", "type": "medication", "entity_any": ["epinephrine", "epi"], "dose": "1 mg"},
+    {"t": "08:24", "type": "milestone", "entity_any": ["rosc"]}
+  ],
+  "optional_events": [
+    {"t": "01:05", "type": "procedure", "entity_any": ["bag", "ventilation", "bagging", "bag-mask"]},
+    {"t": "00:40", "type": "procedure", "entity_any": ["pads"]},
+    {"t": "00:00", "type": "assessment", "entity_any": ["pulseless", "no pulse"]},
+    {"t": "08:24", "type": "rhythm_check", "entity_any": ["organized", "organized rhythm"]},
+    {"t": "08:36", "type": "milestone", "entity_any": ["rosc"], "value": "14:40"}
+  ],
+  "forbidden_events": [
+    {"type": "shock", "t_window": ["02:00", "02:16"], "note": "'charging to 200' is not a delivered shock"},
+    {"type": "medication", "entity_any": ["amiodarone"], "t_window": ["04:15", "04:35"], "note": "'let's draw up amiodarone' is an order, not administration"},
+    {"type": "medication", "entity_any": ["epinephrine", "epi"], "t_window": ["02:48", "03:30"], "note": "recorder echo must not double-log"},
+    {"type": "medication", "entity_any": ["epinephrine", "epi"], "t_window": ["06:10", "06:30"], "note": "'want another epi?' question must not log"}
+  ],
+  "expected_guidance": [
+    {"rule_id": "acls_rhythm_check_interval", "urgency": "due_now", "t_window": ["01:58", "02:03"]},
+    {"rule_id": "acls_shock_shockable", "urgency": "due_now", "t_window": ["01:56", "02:15"]},
+    {"rule_id": "acls_shock_shockable", "urgency": "due_now", "t_window": ["03:56", "04:08"]},
+    {"rule_id": "acls_amiodarone_refractory", "urgency": "due_soon", "t_window": ["04:08", "04:40"]},
+    {"rule_id": "acls_epi_interval", "urgency": "due_now", "t_window": ["05:43", "05:50"]},
+    {"rule_id": "acls_epi_interval", "urgency": "alert", "t_window": ["07:43", "07:50"]},
+    {"rule_id": "acls_epi_interval", "urgency": "alert", "t_window": ["07:53", "07:58"]},
+    {"rule_id": "acls_rhythm_check_interval", "urgency": "due_now", "t_window": ["07:56", "08:02"]}
+  ],
+  "forbidden_guidance": [
+    {"rule_id": "acls_shock_rhythm_mismatch"},
+    {"rule_id": "acls_epi_duplicate"},
+    {"rule_id": "acls_amiodarone_max"},
+    {"rule_id": "stroke_door_to_needle"},
+    {"rule_id": "stroke_lkw_documented"}
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "code_start": "2026-07-18T18:17:02",
+  "events": [
+    {
+      "id": "evt_6678665d",
+      "timestamp": "2026-07-18T18:17:02",
+      "type": "milestone",
+      "entity": "code stroke",
+      "dose": null,
+      "value": "10:05",
+      "source_utterance": "CHARGE NURSE: Code stroke, ED bay three \u2014 time is ten oh five. Sixty-eight-year-old with sudden right-sided weakness and slurred speech.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_73ff4425",
+      "timestamp": "2026-07-18T18:17:47",
+      "type": "assessment",
+      "entity": "last known well",
+      "dose": null,
+      "value": "09:30",
+      "source_utterance": "NURSE 1: Family says she was last known well at nine thirty this morning.",
+      "confidence": 0.96
+    },
+    {
+      "id": "evt_3accf531",
+      "timestamp": "2026-07-18T18:19:32",
+      "type": "assessment",
+      "entity": "NIHSS",
+      "dose": null,
+      "value": "11",
+      "source_utterance": "PHYSICIAN: NIHSS is eleven.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_83e6233d",
+      "timestamp": "2026-07-18T18:20:12",
+      "type": "assessment",
+      "entity": "glucose",
+      "dose": null,
+      "value": "122",
+      "source_utterance": "NURSE 2: Glucose is one twenty-two.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_25c728fc",
+      "timestamp": "2026-07-18T18:35:32",
+      "type": "procedure",
+      "entity": "CT head",
+      "dose": null,
+      "value": null,
+      "source_utterance": "CT TECH: Non-contrast head CT is done, images are coming up.",
+      "confidence": 0.85
+    },
+    {
+      "id": "evt_c9d515e2",
+      "timestamp": "2026-07-18T18:38:02",
+      "type": "assessment",
+      "entity": "CT no hemorrhage",
+      "dose": null,
+      "value": null,
+      "source_utterance": "PHYSICIAN: CT shows no hemorrhage. She's a thrombolysis candidate \u2014 get consent and mix the tenecteplase.",
+      "confidence": 0.9
+    },
+    {
+      "id": "evt_0382348f",
+      "timestamp": "2026-07-18T18:41:12",
+      "type": "assessment",
+      "entity": "pulseless",
+      "dose": null,
+      "value": null,
+      "source_utterance": "NURSE 1: She's not responding... I can't feel a pulse \u2014 she's pulseless!",
+      "confidence": 0.95
+    },
+    {
+      "id": "evt_3efa64c5",
+      "timestamp": "2026-07-18T18:41:22",
+      "type": "milestone",
+      "entity": "code start",
+      "dose": null,
+      "value": null,
+      "source_utterance": "PHYSICIAN: Code blue \u2014 start compressions now.",
+      "confidence": 0.9
+    },
+    {
+      "id": "evt_29355a7f",
+      "timestamp": "2026-07-18T18:43:17",
+      "type": "rhythm_check",
+      "entity": "PEA",
+      "dose": null,
+      "value": null,
+      "source_utterance": "PHYSICIAN: Hold compressions, rhythm check \u2014 that's PEA. No shock, back on the chest.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_112e2dea",
+      "timestamp": "2026-07-18T18:43:42",
+      "type": "medication",
+      "entity": "epinephrine",
+      "dose": "1 mg",
+      "value": null,
+      "source_utterance": "NURSE 2: Epi one milligram is in.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_35575335",
+      "timestamp": "2026-07-18T18:45:22",
+      "type": "rhythm_check",
+      "entity": "PEA",
+      "dose": null,
+      "value": null,
+      "source_utterance": "PHYSICIAN: Rhythm check \u2014 still PEA. Continue compressions.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_a1cbad08",
+      "timestamp": "2026-07-18T18:47:47",
+      "type": "medication",
+      "entity": "epinephrine",
+      "dose": "1 mg",
+      "value": null,
+      "source_utterance": "NURSE 2: Second epi, one milligram is in.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_c9fb43da",
+      "timestamp": "2026-07-18T18:49:12",
+      "type": "rhythm_check",
+      "entity": "organized rhythm",
+      "dose": null,
+      "value": null,
+      "source_utterance": "PHYSICIAN: Rhythm check \u2014 we've got a rhythm... and a pulse. ROSC, time is ten thirty-seven.",
+      "confidence": 0.9
+    },
+    {
+      "id": "evt_9fce71f3",
+      "timestamp": "2026-07-18T18:49:12",
+      "type": "milestone",
+      "entity": "ROSC",
+      "dose": null,
+      "value": "10:37",
+      "source_utterance": "PHYSICIAN: Rhythm check \u2014 we've got a rhythm... and a pulse. ROSC, time is ten thirty-seven.",
+      "confidence": 0.97
+    },
+    {
+      "id": "evt_436f7076",
+      "timestamp": "2026-07-18T18:58:22",
+      "type": "medication",
+      "entity": "tenecteplase",
+      "dose": "25 mg",
+      "value": null,
+      "source_utterance": "NURSE 1: Tenecteplase bolus is in, twenty-five milligrams.",
+      "confidence": 0.96
+    }
+  ]
+}

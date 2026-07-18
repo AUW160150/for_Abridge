@@ -30,6 +30,10 @@ class Reasoner:
     def on_tick(self, now: datetime) -> list[Guidance]:
         return self._convert(self.engine.poll(now), now)
 
+    def emit(self, findings: list[Finding], now: datetime) -> list[Guidance]:
+        """Convert externally produced findings (e.g. router interplay) to Guidance."""
+        return self._convert(findings, now)
+
     def _convert(self, findings: list[Finding], now: datetime) -> list[Guidance]:
         issued: list[Guidance] = []
         for f in findings:

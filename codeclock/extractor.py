@@ -50,6 +50,11 @@ class ExtractedEvent(BaseModel):
     dose: str | None = Field(
         description="Dose if stated, normalized like '1 mg' or '300 mg'; null otherwise."
     )
+    value: str | None = Field(
+        description="Stated measurement or clock time carried by the event, e.g. "
+        "NIHSS score '11', glucose '122', last-known-well time '09:30', code-start "
+        "wall-clock time '14:32'; null if none."
+    )
     source_utterance: str = Field(
         description="The exact utterance text this event came from, copied verbatim "
         "from the transcript (speaker label included)."
@@ -66,10 +71,11 @@ class ChunkExtraction(BaseModel):
 
 
 SYSTEM_PROMPT = """\
-You are the extraction component of a real-time code-blue documentation agent. \
-You receive a resuscitation transcript in small chunks as it happens and emit \
-structured clinical events. A separate deterministic protocol engine consumes \
-your events — your only job is faithful extraction, not clinical judgment.
+You are the extraction component of a real-time emergency-code documentation \
+agent (cardiac arrest / code blue, code stroke, and similar). You receive a \
+live transcript in small chunks as it happens and emit structured clinical \
+events. A separate deterministic protocol engine consumes your events — your \
+only job is faithful extraction, not clinical judgment.
 
 Rules:
 - Log an event only when the utterance states it actually happened ("shock \
@@ -86,7 +92,16 @@ announced but no rhythm stated yet, entity is 'rhythm check - result pending'.
 - source_utterance must be copied verbatim from the transcript line, including \
 the speaker label, excluding the [MM:SS] marker.
 - timestamp is the [MM:SS] marker of that line.
-- Milestones: code start, ROSC, time of death.
+- Milestones: code start (entity 'code start' for an arrest, 'code stroke' for \
+a stroke activation), ROSC, time of death. If a wall-clock time is stated \
+("time is fourteen thirty-two"), put it in value as HH:MM (24h).
+- Assessments carry their stated measurement in value: NIHSS score, glucose, \
+last-known-well time (entity 'last known well', value HH:MM), CT result \
+(entity like 'CT no hemorrhage'). Losing a pulse mid-code is an assessment \
+(entity 'pulseless').
+- Do NOT log: home medications a patient takes, hypotheticals ("if she goes \
+into v-fib..."), drugs merely drawn up or ready, or orders explicitly held \
+("hold the epi").
 - If a chunk contains no loggable events, return an empty list.\
 """
 
@@ -164,6 +179,7 @@ class Extractor:
             type=e.type,
             entity=e.entity,
             dose=e.dose,
+            value=e.value,
             source_utterance=e.source_utterance,
             confidence=e.confidence,
         )

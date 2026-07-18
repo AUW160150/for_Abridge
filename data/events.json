@@ -1,140 +1,175 @@
 {
-  "code_start": "2026-07-18T17:48:59",
+  "code_start": "2026-07-18T18:20:17",
   "events": [
     {
-      "id": "evt_f79e52d3",
-      "timestamp": "2026-07-18T17:48:59",
+      "id": "evt_aaa1cad4",
+      "timestamp": "2026-07-18T18:20:17",
       "type": "milestone",
       "entity": "code start",
       "dose": null,
+      "value": "14:32",
       "source_utterance": "CODE LEADER: Time is fourteen thirty-two, we have a code blue. No pulse \u2014 starting compressions.",
-      "confidence": 0.97
+      "confidence": 0.98
     },
     {
-      "id": "evt_9ef5fd3d",
-      "timestamp": "2026-07-18T17:48:59",
+      "id": "evt_59c66e7b",
+      "timestamp": "2026-07-18T18:20:17",
       "type": "procedure",
-      "entity": "CPR",
+      "entity": "chest compressions",
       "dose": null,
+      "value": null,
       "source_utterance": "CODE LEADER: Time is fourteen thirty-two, we have a code blue. No pulse \u2014 starting compressions.",
       "confidence": 0.9
     },
     {
-      "id": "evt_5e1dfa8c",
-      "timestamp": "2026-07-18T17:49:39",
+      "id": "evt_7885a885",
+      "timestamp": "2026-07-18T18:20:29",
+      "type": "assessment",
+      "entity": "pulseless",
+      "dose": null,
+      "value": null,
+      "source_utterance": "NURSE 1: CPR in progress, she's pulseless.",
+      "confidence": 0.85
+    },
+    {
+      "id": "evt_7a02da31",
+      "timestamp": "2026-07-18T18:20:57",
       "type": "procedure",
       "entity": "IV access",
       "dose": null,
+      "value": null,
       "source_utterance": "NURSE 2: Pads are on. We've got IV access, right AC.",
       "confidence": 0.85
     },
     {
-      "id": "evt_083117e2",
-      "timestamp": "2026-07-18T17:50:04",
+      "id": "evt_218fcc21",
+      "timestamp": "2026-07-18T18:21:22",
       "type": "procedure",
       "entity": "bag-mask ventilation",
       "dose": null,
+      "value": null,
       "source_utterance": "RESP THERAPIST: Bagging her now, good chest rise.",
       "confidence": 0.8
     },
     {
-      "id": "evt_d102758a",
-      "timestamp": "2026-07-18T17:51:02",
+      "id": "evt_ad3e5fd3",
+      "timestamp": "2026-07-18T18:22:20",
       "type": "rhythm_check",
       "entity": "v-fib",
       "dose": null,
+      "value": null,
       "source_utterance": "CODE LEADER: That's v-fib. Back on the chest, charging to two hundred.",
       "confidence": 0.97
     },
     {
-      "id": "evt_33a25a44",
-      "timestamp": "2026-07-18T17:51:16",
+      "id": "evt_c78e2508",
+      "timestamp": "2026-07-18T18:22:34",
       "type": "shock",
       "entity": "defibrillation",
       "dose": "200 J",
+      "value": null,
       "source_utterance": "CODE LEADER: Everybody clear... shocking. Shock delivered, resume CPR.",
       "confidence": 0.96
     },
     {
-      "id": "evt_6ae131cb",
-      "timestamp": "2026-07-18T17:51:44",
+      "id": "evt_57a1b5eb",
+      "timestamp": "2026-07-18T18:23:02",
       "type": "medication",
       "entity": "epinephrine",
       "dose": "1 mg",
+      "value": null,
       "source_utterance": "NURSE 1: Pushing an amp of epi now \u2014 one milligram.",
       "confidence": 0.97
     },
     {
-      "id": "evt_4899a4a0",
-      "timestamp": "2026-07-18T17:52:57",
+      "id": "evt_5eddbe5f",
+      "timestamp": "2026-07-18T18:24:15",
       "type": "rhythm_check",
       "entity": "v-fib",
       "dose": null,
+      "value": null,
       "source_utterance": "CODE LEADER: Hold CPR \u2014 rhythm check. Still in v-fib. Charging to two hundred.",
       "confidence": 0.96
     },
     {
-      "id": "evt_f0c9159b",
-      "timestamp": "2026-07-18T17:53:08",
+      "id": "evt_aeb057a6",
+      "timestamp": "2026-07-18T18:24:26",
       "type": "shock",
       "entity": "defibrillation",
-      "dose": null,
+      "dose": "200 J",
+      "value": null,
       "source_utterance": "CODE LEADER: Clear. Shock's delivered, back on the chest.",
-      "confidence": 0.9
+      "confidence": 0.92
     },
     {
-      "id": "evt_2ce8b50c",
-      "timestamp": "2026-07-18T17:53:40",
+      "id": "evt_880fda66",
+      "timestamp": "2026-07-18T18:24:58",
       "type": "medication",
       "entity": "amiodarone",
       "dose": "300 mg",
+      "value": null,
       "source_utterance": "NURSE 1: Amiodarone three hundred is in.",
-      "confidence": 0.98
+      "confidence": 0.97
     },
     {
-      "id": "evt_86b3b6e9",
-      "timestamp": "2026-07-18T17:54:57",
+      "id": "evt_1b0370d1",
+      "timestamp": "2026-07-18T18:26:15",
       "type": "rhythm_check",
       "entity": "asystole",
       "dose": null,
+      "value": null,
       "source_utterance": "CODE LEADER: Hold compressions \u2014 rhythm check... okay, that looks like asystole now. No shock, resume compressions.",
-      "confidence": 0.96
+      "confidence": 0.95
     },
     {
-      "id": "evt_0fc8a1be",
-      "timestamp": "2026-07-18T17:55:44",
+      "id": "evt_17a316a8",
+      "timestamp": "2026-07-18T18:27:02",
       "type": "procedure",
       "entity": "intubation",
       "dose": null,
+      "value": "7.5 at 22 at lip",
       "source_utterance": "RESP THERAPIST: Tube's in, seven-point-five at twenty-two at the lip. Good color change.",
       "confidence": 0.95
     },
     {
-      "id": "evt_23b920f2",
-      "timestamp": "2026-07-18T17:56:54",
+      "id": "evt_a0de2032",
+      "timestamp": "2026-07-18T18:28:12",
       "type": "medication",
       "entity": "epinephrine",
       "dose": "1 mg",
+      "value": null,
       "source_utterance": "NURSE 1: Second epi going in now, one milligram.",
       "confidence": 0.96
     },
     {
-      "id": "evt_80bd429f",
-      "timestamp": "2026-07-18T17:57:23",
+      "id": "evt_30834e06",
+      "timestamp": "2026-07-18T18:28:41",
       "type": "rhythm_check",
       "entity": "organized rhythm",
       "dose": null,
+      "value": null,
       "source_utterance": "CODE LEADER: Rhythm check \u2014 hold CPR... we've got an organized rhythm. Checking pulse... there's a pulse. We have ROSC.",
       "confidence": 0.97
     },
     {
-      "id": "evt_a1e023be",
-      "timestamp": "2026-07-18T17:57:23",
+      "id": "evt_3e7f1e76",
+      "timestamp": "2026-07-18T18:28:41",
       "type": "milestone",
       "entity": "ROSC",
       "dose": null,
+      "value": null,
       "source_utterance": "CODE LEADER: Rhythm check \u2014 hold CPR... we've got an organized rhythm. Checking pulse... there's a pulse. We have ROSC.",
-      "confidence": 0.98
+      "confidence": 0.9
+    },
+    {
+      "id": "evt_c6aa794a",
+      "timestamp": "2026-07-18T18:28:53",
+      "type": "milestone",
+      "entity": "ROSC",
+      "dose": null,
+      "value": "14:40",
+      "source_utterance": "CODE LEADER: Time of ROSC fourteen forty. Nice work \u2014 let's move to post-arrest care and get a twelve-lead.",
+      "confidence": 0.75
     }
   ]
 }
