@@ -44,6 +44,40 @@ reveals the exact utterance heard plus the protocol rule that fired. At code
 end it emits the downloadable code record. Extraction results are cached in
 data/events.json; pass --fresh to run_pipeline.py to re-extract.
 
+## Live ambient mode — the system actually listens
+
+```bash
+python make_audio.py data/transcript.txt 3   # synthesize demo audio (multi-voice TTS)
+python server.py                             # then pick "LIVE — demo audio" or "LIVE — microphone"
+```
+
+Audio (microphone, or a WAV streamed in real time) is transcribed locally
+with faster-whisper — raw audio never leaves the machine; only text chunks go
+to the extraction model. Word-level timestamps anchor protocol timing, a
+domain vocabulary prompt biases the ASR, and the extractor normalizes real
+ASR noise ("EP" -> epinephrine, "a meoduron" -> amiodarone) while keeping the
+verbatim heard text as provenance. The demo recording is synthesized from the
+scripted transcript (multi-voice macOS TTS) so the audio demo stays aligned
+with ground truth — no copyrighted TV audio needed. `_x3` files compress the
+silences 3x; the pipeline maps audio time back to protocol time so the real
+ACLS intervals still apply. The "voice alerts" toggle makes the agent speak
+due-now/alert prompts aloud.
+
+## Clinician-facing surfaces
+
+- **/record** — the post-code artifact: alerts with their source utterances,
+  the full event log with confirm/flag review per entry (low-confidence
+  entries highlighted and never silently trusted), attending sign-off, and
+  export (.txt / .json). The draft-until-signed flow keeps judgment with the
+  human.
+- **/rubrics** — the trust walkthrough: every protocol rule with its
+  guideline citation, the timing/dose constants, each scenario's ground-truth
+  rubric (required / optional / forbidden / expected guidance), the latest
+  eval results with a run-eval-now button, and a governed change-proposal
+  queue — clinicians propose constant changes with a rationale; accepted
+  changes are one line in `protocol_config.py` and re-run the full test +
+  eval suite before shipping.
+
 The scripted transcript (`data/transcript.txt`) seeds one deliberate protocol
 deviation — epi #2 given 5:10 after epi #1, outside the ACLS 3-5 min window —
 which the protocol engine (Phase 2) will catch for the hero demo beat.

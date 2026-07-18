@@ -39,6 +39,132 @@ def index():
     return send_from_directory("static", "index.html")
 
 
+@app.route("/record")
+def record_page():
+    return send_from_directory("static", "record.html")
+
+
+@app.route("/rubrics")
+def rubrics_page():
+    return send_from_directory("static", "rubrics.html")
+
+
+@app.route("/api/record")
+def api_record():
+    from run_eval import replay_guidance
+
+    scenario = request.args.get("scenario", "arrest")
+    transcript, cache = SCENARIOS.get(scenario, SCENARIOS["arrest"])
+    events, code_start = load_or_extract(transcript, cache)
+    events.sort(key=lambda e: e.timestamp)
+    router, fired, activations = replay_guidance(events, code_start)
+
+    def el(ts):
+        return (ts - code_start).total_seconds()
+
+    return {
+        "scenario": scenario,
+        "events": [
+            {
+                "id": e.id, "t": el(e.timestamp), "type": e.type, "entity": e.entity,
+                "dose": e.dose, "value": e.value, "source": e.source_utterance,
+                "confidence": e.confidence, "low_confidence": e.confidence < 0.75,
+            }
+            for e in events
+        ],
+        "activations": [
+            {"rubric_id": a["rubric_id"], "t": a["t"]} for a in activations
+        ],
+        "alerts": [
+            {"t": (g.issued_at - code_start).total_seconds(), "message": g.message,
+             "rule_id": g.rule_id, "rubric_id": g.rubric_id,
+             "trigger_ids": g.triggering_event_ids}
+            for g in router.guidance_log if g.urgency == "alert"
+        ],
+        "totals": {
+            "events": len(events),
+            "guidance": len(router.guidance_log),
+            "low_confidence": sum(1 for e in events if e.confidence < 0.75),
+        },
+    }
+
+
+@app.route("/api/rubrics")
+def api_rubrics():
+    import json as _json
+
+    from codeclock import protocol_config as cfg
+
+    constants = {
+        k: v for k, v in vars(cfg).items()
+        if k.isupper() and isinstance(v, (int, float))
+    }
+    scenarios = []
+    for gt_path in sorted(Path("data/ground_truth").glob("*.json")):
+        gt = _json.loads(gt_path.read_text())
+        scenarios.append(
+            {
+                "name": gt["name"],
+                "transcript": gt["transcript"],
+                "n_events": len(gt["events"]),
+                "n_optional": len(gt.get("optional_events", [])),
+                "n_forbidden": len(gt.get("forbidden_events", [])),
+                "expected_guidance": gt.get("expected_guidance", []),
+                "forbidden_guidance": gt.get("forbidden_guidance", []),
+            }
+        )
+    report_path = Path("eval/report.json")
+    proposals_path = Path("data/rubric_proposals.json")
+    return {
+        "rules": [
+            {"id": r.id, "description": r.description, "source": r.guideline_source}
+            for r in RULES.values()
+        ],
+        "constants": constants,
+        "scenarios": scenarios,
+        "report": _json.loads(report_path.read_text()) if report_path.exists() else None,
+        "proposals": _json.loads(proposals_path.read_text()) if proposals_path.exists() else [],
+    }
+
+
+@app.route("/api/run_eval", methods=["POST"])
+def api_run_eval():
+    from run_eval import eval_scenario, write_report
+
+    results = []
+    for gt_path in sorted(Path("data/ground_truth").glob("*.json")):
+        results.append(eval_scenario(gt_path, fresh=False))
+    write_report(results)
+    return {
+        r.name: {"metrics": r.metrics, "failures": r.failures} for r in results
+    }
+
+
+@app.route("/api/propose", methods=["POST"])
+def api_propose():
+    import json as _json
+    from datetime import datetime as _dt
+
+    proposals_path = Path("data/rubric_proposals.json")
+    proposals = (
+        _json.loads(proposals_path.read_text()) if proposals_path.exists() else []
+    )
+    body = request.get_json(force=True)
+    proposals.append(
+        {
+            "constant": body.get("constant"),
+            "current": body.get("current"),
+            "proposed": body.get("proposed"),
+            "rationale": body.get("rationale", ""),
+            "author": body.get("author", "anonymous"),
+            "submitted_at": _dt.now().isoformat(timespec="seconds"),
+            "status": "pending clinician review",
+        }
+    )
+    proposals_path.write_text(_json.dumps(proposals, indent=2))
+    return {"ok": True, "pending": len(proposals)}
+
+
 def _sse(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
 
@@ -121,10 +247,91 @@ def _resolution_prefixes(e: ClinicalEvent, router: ProtocolRouter) -> list[str]:
     return []
 
 
+def _live_stream():
+    """SSE generator for the live ambient mode (mic or real-time audio file)."""
+    import re as _re
+
+    from codeclock.live import LiveSession
+
+    source = request.args.get("source", "file")
+    speak = request.args.get("speak") == "1"
+    audio_name = request.args.get("audio", "transcript_x3")
+    audio_path = Path("data/audio") / f"{audio_name}.wav"
+    m = _re.search(r"_x([\d.]+)$", audio_name)
+    timescale = float(m.group(1)) if m else 1.0
+    if source == "mic":
+        timescale = 1.0
+
+    session = LiveSession(
+        source=source,
+        audio_path=audio_path,
+        timescale=timescale,
+        speak=speak,
+    )
+    session.start()
+
+    def generate():
+        yield _sse({"kind": "init", "speed": 1, "live": True, "timescale": timescale})
+        try:
+            while True:
+                msg = session.queue.get()
+                kind = msg.get("kind")
+                if kind == "done":
+                    break
+                if kind == "event_obj":
+                    yield _sse(_event_msg(msg["event"], msg["t"]))
+                elif kind == "guidance_obj":
+                    yield _sse(_guidance_msg(msg["guidance"], msg["t"]))
+                elif kind == "rubric_obj":
+                    yield _sse(_rubric_msg(msg["activation"], msg["t"]))
+                elif kind == "finished":
+                    events, guidance = msg["events"], msg["guidance"]
+                    alerts = [g for g in guidance if g.urgency == "alert"]
+                    yield _sse(
+                        {
+                            "kind": "record",
+                            "lines": [
+                                {
+                                    "t": (e.timestamp - session.code_start).total_seconds(),
+                                    "type": e.type,
+                                    "entity": e.entity,
+                                    "dose": e.dose,
+                                    "low_confidence": e.confidence < 0.75,
+                                }
+                                for e in events
+                            ],
+                            "totals": {
+                                "epi": sum(
+                                    1 for e in events
+                                    if e.type == "medication" and "epi" in e.entity.lower()
+                                ),
+                                "shocks": sum(1 for e in events if e.type == "shock"),
+                                "guidance": len(guidance),
+                                "alerts": len(alerts),
+                            },
+                            "alerts": [
+                                {"message": g.message, "rule_id": g.rule_id} for g in alerts
+                            ],
+                        }
+                    )
+                else:
+                    yield _sse(msg)  # asr, asr_status, tick, status, error
+        finally:
+            session.stop()
+
+    return Response(
+        generate(),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 @app.route("/api/stream")
 def stream():
     speed = max(0.5, min(60.0, float(request.args.get("speed", 8))))
     scenario = request.args.get("scenario", "arrest")
+    if scenario == "live":
+        return _live_stream()
     transcript, cache = SCENARIOS.get(scenario, SCENARIOS["arrest"])
 
     def generate():

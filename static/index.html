@@ -103,6 +103,13 @@
   .rubric-item { border-left: 4px solid #67e8f9; background: #0d1b24; }
   .rubric-item .g-msg { color: #67e8f9; }
 
+  #asrbar {
+    display: none; padding: 6px 18px; border-bottom: 1px solid var(--line);
+    background: #0d141c; color: var(--dim); font-size: 12.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #asrbar b { color: #67e8f9; font-weight: 700; letter-spacing: .08em; }
+
   #recordwrap { display: none; border-top: 1px solid var(--line); background: var(--panel); padding: 12px 18px; max-height: 38vh; overflow-y: auto; }
   #recordwrap h2 { font-size: 11px; letter-spacing: .14em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
   #record { font-size: 12.5px; white-space: pre; }
@@ -117,11 +124,18 @@
     <div id="status" class="pill idle">standby</div>
     <div id="rubrics"></div>
     <div class="spacer"></div>
+    <a href="/record" class="hint" style="text-decoration:none">code record ↗</a>
+    <a href="/rubrics" class="hint" style="text-decoration:none">rubrics &amp; eval ↗</a>
     <span class="hint">click any event or prompt to reveal its source</span>
     <select id="scenario">
-      <option value="arrest" selected>Cardiac arrest</option>
-      <option value="stroke">Stroke → arrest</option>
+      <option value="arrest" selected>Cardiac arrest (replay)</option>
+      <option value="stroke">Stroke → arrest (replay)</option>
+      <option value="live-file">● LIVE — demo audio</option>
+      <option value="live-mic">● LIVE — microphone</option>
     </select>
+    <label class="hint" style="display:flex;align-items:center;gap:4px">
+      <input type="checkbox" id="speak"> voice alerts
+    </label>
     <select id="speed">
       <option value="2">2× speed</option>
       <option value="8" selected>8× speed</option>
@@ -130,6 +144,7 @@
     </select>
     <button id="start">▶ Start code</button>
   </header>
+  <div id="asrbar"><b>HEARD</b> <span id="asrtext">—</span></div>
 
   <main>
     <section>
@@ -268,8 +283,15 @@ $("start").onclick = () => {
   $("status").className = "pill live"; $("status").textContent = "● live";
   $("start").textContent = "↻ Restart";
 
-  source = new EventSource(
-    `/api/stream?speed=${$("speed").value}&scenario=${$("scenario").value}`);
+  const scen = $("scenario").value;
+  const live = scen.startsWith("live");
+  $("asrbar").style.display = live ? "block" : "none";
+  $("asrtext").textContent = "—";
+  const url = live
+    ? `/api/stream?scenario=live&source=${scen === "live-mic" ? "mic" : "file"}` +
+      `&audio=transcript_x3&speak=${$("speak").checked ? 1 : 0}`
+    : `/api/stream?speed=${$("speed").value}&scenario=${scen}`;
+  source = new EventSource(url);
   source.onmessage = msg => {
     const d = JSON.parse(msg.data);
     if (d.kind === "tick") $("clock").textContent = mmss(d.t);
@@ -280,6 +302,9 @@ $("start").onclick = () => {
     else if (d.kind === "status" && d.status === "rosc") {
       $("status").className = "pill rosc"; $("status").textContent = "✓ ROSC";
     }
+    else if (d.kind === "asr") $("asrtext").textContent = `[${mmss(d.t)}] ${d.text}`;
+    else if (d.kind === "asr_status") $("asrtext").textContent = d.text;
+    else if (d.kind === "error") { $("asrtext").textContent = "ERROR: " + d.text; }
     else if (d.kind === "record") { showRecord(d); source.close(); }
   };
   source.onerror = () => source.close();

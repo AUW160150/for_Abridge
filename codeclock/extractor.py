@@ -90,7 +90,13 @@ Never re-emit them; use them to resolve references like "second epi".
 is the rhythm (e.g. 'v-fib', 'asystole', 'organized rhythm'). If a check is \
 announced but no rhythm stated yet, entity is 'rhythm check - result pending'.
 - source_utterance must be copied verbatim from the transcript line, including \
-the speaker label, excluding the [MM:SS] marker.
+the speaker label if present, excluding the [MM:SS] marker.
+- Transcripts may come from speech recognition and can mis-render clinical \
+terms (e.g. "EP" for epi, "a meoduron" for amiodarone, "a systole" for \
+asystole, "pulse-less" for pulseless). When context makes the intended term \
+clear, normalize entity to the correct clinical term but keep \
+source_utterance verbatim as heard, and lower confidence to reflect the \
+ambiguity.
 - timestamp is the [MM:SS] marker of that line.
 - Milestones: code start (entity 'code start' for an arrest, 'code stroke' for \
 a stroke activation), ROSC, time of death. If a wall-clock time is stated \
@@ -150,10 +156,15 @@ class Extractor:
     def stream(self, transcript_text: str) -> Iterator[ClinicalEvent]:
         lines = parse_transcript(transcript_text)
         for i in range(0, len(lines), CHUNK_SIZE):
-            chunk = lines[i : i + CHUNK_SIZE]
-            for event in self._extract_chunk(chunk):
-                self.events.append(event)
-                yield event
+            yield from self.feed(lines[i : i + CHUNK_SIZE])
+
+    def feed(self, chunk: list[TranscriptLine]) -> list[ClinicalEvent]:
+        """Incremental extraction — used by the live (ASR) pipeline."""
+        if not chunk:
+            return []
+        events = self._extract_chunk(chunk)
+        self.events.extend(events)
+        return events
 
     def _extract_chunk(self, chunk: list[TranscriptLine]) -> list[ClinicalEvent]:
         response = self.client.messages.parse(

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Code Clock — Rubrics &amp; Evaluation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg:#0b0f14; --panel:#11161d; --panel2:#161d26; --line:#223041;
+          --text:#dbe4ee; --dim:#7d8fa3; --alert:#ef4444; --ok:#34d399; --cyan:#67e8f9; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text);
+         font:14px/1.55 -apple-system,"Segoe UI",sans-serif; padding:26px 5vw 80px; }
+  .mono { font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  a { color:#7dd3fc; text-decoration:none; }
+  h1 { font-size:17px; letter-spacing:.1em; } h1 span { color:var(--alert); }
+  .sub { color:var(--dim); margin:4px 0 22px; }
+  h2 { font-size:12px; color:var(--cyan); letter-spacing:.14em; text-transform:uppercase;
+       margin:30px 0 10px; }
+  p.exp { color:var(--dim); font-size:13px; max-width:900px; margin-bottom:10px; }
+  table { border-collapse:collapse; width:100%; background:var(--panel);
+          border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:8px; }
+  th,td { text-align:left; padding:7px 12px; border-bottom:1px solid var(--line);
+          font-size:13px; vertical-align:top; }
+  th { color:var(--dim); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; }
+  button,input,textarea { background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer; }
+  input,textarea { cursor:text; }
+  .pass { color:var(--ok); font-weight:700; } .fail { color:var(--alert); font-weight:700; }
+  .metric { color:var(--dim); }
+  #proposeform { display:none; background:var(--panel); border:1px solid var(--line);
+    border-radius:8px; padding:14px; margin:10px 0; max-width:640px; }
+  #proposeform div { margin-bottom:8px; }
+  .steps li { margin-bottom:8px; color:var(--dim); font-size:13px; max-width:900px; }
+  .steps b { color:var(--text); }
+  .badge { font-size:10px; padding:1px 7px; border-radius:4px; background:#1c2733;
+           color:var(--cyan); letter-spacing:.06em; }
+</style>
+</head>
+<body>
+  <h1>CODE <span>CLOCK</span> — rubrics &amp; evaluation</h1>
+  <div class="sub">How the protocol rules are defined, evidenced, evaluated, and governed.
+    <a href="/">← live view</a> · <a href="/record">code record</a></div>
+
+  <h2>How a scenario rubric is built and evaluated</h2>
+  <ol class="steps">
+    <li><b>1 — Rules are code, not prompts.</b> Each rubric (ACLS arrest, code stroke) is a set of
+      deterministic rules with intervals and dose limits kept in one constants file a clinician can
+      read. The LLM only extracts events; it never decides what's due. Rubric <i>selection</i> is
+      deterministic too — evidence keywords activate a rubric, and every activation is recorded with
+      the triggering utterance.</li>
+    <li><b>2 — Ground truth is authored with the scenario.</b> Every scripted transcript ships with a
+      labeled ground truth: required events, benign optional events, forbidden traps (negations,
+      hypotheticals, drawn-up-not-given), expected guidance with time windows, and guidance that must
+      never fire. Labels are provisional until reviewed by clinicians — the review workflow is the
+      proposals queue below.</li>
+    <li><b>3 — Three eval layers</b> (modeled on enterprise clinical-AI evaluation):
+      <b>clinical accuracy</b> (P/R/F1, timing, dose/value, confidence calibration),
+      <b>boundary/adversarial</b> (an all-traps transcript where logging anything is a critical false
+      positive), and <b>guidance safety</b> (expected prompts must fire in-window; forbidden prompts
+      — e.g. shock-on-PEA — must never fire).</li>
+    <li><b>4 — Provenance is a gate, not a metric.</b> 100% of events must carry an utterance found
+      verbatim in the audio transcript, and 100% of guidance must chain to real event ids and a
+      registered rule. One break fails the run.</li>
+    <li><b>5 — Changes are governed.</b> Constants aren't hot-editable in production: propose a change
+      below with a rationale; it lands in a review queue; an accepted change is one line in the
+      constants file, and the full unit-test + eval suite re-runs before it ships.</li>
+  </ol>
+
+  <h2>Protocol rules <span class="badge">deterministic engine</span></h2>
+  <table id="rules"><thead><tr><th>rule id</th><th>description</th><th>guideline source</th></tr></thead><tbody></tbody></table>
+
+  <h2>Timing &amp; dose constants <span class="badge">one file, clinician-editable</span></h2>
+  <p class="exp">These are the numbers the engine runs on. Spot one that doesn't match your floor's
+     practice? Propose a change — it goes to clinician review, not straight to production.</p>
+  <table id="consts"><thead><tr><th>constant</th><th>value</th><th></th></tr></thead><tbody></tbody></table>
+  <div id="proposeform">
+    <div><b id="pf-name"></b> — current value <span class="mono" id="pf-current"></span></div>
+    <div><input id="pf-value" placeholder="proposed value"></div>
+    <div><textarea id="pf-rationale" rows="2" cols="60" placeholder="clinical rationale (required)"></textarea></div>
+    <div><input id="pf-author" placeholder="your name / role"></div>
+    <button id="pf-submit">Submit for clinician review</button>
+    <button id="pf-cancel">Cancel</button>
+  </div>
+
+  <h2>Scenario rubrics &amp; ground truth</h2>
+  <div id="scenarios"></div>
+
+  <h2>Latest evaluation results
+    <button id="runeval" style="margin-left:12px">▶ Run eval now</button>
+    <span id="evalstatus" class="metric"></span>
+  </h2>
+  <div id="report"></div>
+
+  <h2>Pending change proposals <span class="badge">clinician review queue</span></h2>
+  <div id="proposals"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let DATA = null;
+
+function esc(s) { return String(s).replace(/</g, "&lt;"); }
+
+async function load() {
+  DATA = await (await fetch("/api/rubrics")).json();
+
+  $("rules").querySelector("tbody").innerHTML = DATA.rules.map(r =>
+    `<tr><td class="mono">${r.id}</td><td>${esc(r.description)}</td>
+     <td class="metric">${esc(r.source)}</td></tr>`).join("");
+
+  $("consts").querySelector("tbody").innerHTML = Object.entries(DATA.constants).map(([k, v]) =>
+    `<tr><td class="mono">${k}</td><td class="mono">${v}</td>
+     <td><button onclick="propose('${k}', ${JSON.stringify(v)})">propose change</button></td></tr>`).join("");
+
+  $("scenarios").innerHTML = DATA.scenarios.map(s => `
+    <table><thead><tr><th colspan="2">${s.name} — <span class="metric">${s.transcript}</span></th></tr></thead>
+    <tbody>
+      <tr><td>ground-truth events</td><td>${s.n_events} required · ${s.n_optional} optional ·
+          ${s.n_forbidden} forbidden traps</td></tr>
+      <tr><td>expected guidance</td><td>${s.expected_guidance.map(g =>
+          `<span class="mono">${g.rule_id}</span> [${g.urgency}] ${(g.t_window||[]).join("–")}`).join("<br>") || "none"}</td></tr>
+      <tr><td>must never fire</td><td>${s.forbidden_guidance.map(g =>
+          `<span class="mono">${g.rule_id}</span>${g.urgency ? " [" + g.urgency + "]" : ""}`).join("<br>") || "none"}</td></tr>
+    </tbody></table>`).join("");
+
+  renderReport(DATA.report);
+  renderProposals(DATA.proposals);
+}
+
+function renderReport(rep) {
+  if (!rep) { $("report").innerHTML = "<p class='exp'>no report yet — run the eval.</p>"; return; }
+  $("report").innerHTML = Object.entries(rep).map(([name, r]) => {
+    const failures = r.failures || [];
+    const rows = Object.entries(r.metrics).map(([k, v]) =>
+      `<tr><td class="metric">${k}</td><td class="mono">${v}</td></tr>`).join("");
+    return `<table><thead><tr><th colspan="2">${name} —
+      ${failures.length ? `<span class="fail">${failures.length} finding(s)</span>`
+                        : `<span class="pass">all checks passed</span>`}</th></tr></thead>
+      <tbody>${rows}${failures.map(f => `<tr><td class="fail">finding</td><td>${esc(f)}</td></tr>`).join("")}</tbody></table>`;
+  }).join("");
+}
+
+function renderProposals(props) {
+  $("proposals").innerHTML = props.length
+    ? `<table><thead><tr><th>constant</th><th>current → proposed</th><th>rationale</th><th>author</th><th>status</th></tr></thead>
+       <tbody>${props.map(p => `<tr><td class="mono">${esc(p.constant)}</td>
+         <td class="mono">${esc(p.current)} → ${esc(p.proposed)}</td><td>${esc(p.rationale)}</td>
+         <td>${esc(p.author)}</td><td class="metric">${esc(p.status)}</td></tr>`).join("")}</tbody></table>`
+    : "<p class='exp'>none pending.</p>";
+}
+
+window.propose = (name, current) => {
+  $("proposeform").style.display = "block";
+  $("pf-name").textContent = name;
+  $("pf-current").textContent = current;
+  $("proposeform").dataset.constant = name;
+  $("proposeform").dataset.current = current;
+  $("proposeform").scrollIntoView({behavior: "smooth", block: "center"});
+};
+$("pf-cancel").onclick = () => $("proposeform").style.display = "none";
+$("pf-submit").onclick = async () => {
+  if (!$("pf-rationale").value.trim()) { alert("rationale required"); return; }
+  await fetch("/api/propose", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      constant: $("proposeform").dataset.constant,
+      current: $("proposeform").dataset.current,
+      proposed: $("pf-value").value,
+      rationale: $("pf-rationale").value,
+      author: $("pf-author").value,
+    })});
+  $("proposeform").style.display = "none";
+  load();
+};
+
+$("runeval").onclick = async () => {
+  $("evalstatus").textContent = "running offline eval on cached extractions...";
+  const rep = await (await fetch("/api/run_eval", {method: "POST"})).json();
+  $("evalstatus").textContent = "done";
+  renderReport(rep);
+};
+
+load();
+</script>
+</body>
+</html>
