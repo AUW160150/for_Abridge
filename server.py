@@ -255,6 +255,7 @@ def _live_stream():
 
     source = request.args.get("source", "file")
     speak = request.args.get("speak") == "1"
+    listen = request.args.get("listen") == "1"
     audio_name = request.args.get("audio", "transcript_x3")
     audio_path = Path("data/audio") / f"{audio_name}.wav"
     m = _re.search(r"_x([\d.]+)$", audio_name)
@@ -267,6 +268,7 @@ def _live_stream():
         audio_path=audio_path,
         timescale=timescale,
         speak=speak,
+        listen=listen and source == "file",
     )
     session.start()
 

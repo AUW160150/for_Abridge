@@ -46,11 +46,14 @@ class LiveSession:
         audio_path: Path | None = None,
         timescale: float = 1.0,
         speak: bool = False,
+        listen: bool = False,
     ):
         self.source = source
         self.audio_path = audio_path
         self.timescale = timescale
         self.speak = speak
+        self.listen = listen        # file mode: also play the audio out loud
+        self._player: subprocess.Popen | None = None
         self.queue: queue.Queue[dict] = queue.Queue()
         self.stop_flag = threading.Event()
         self.code_start = datetime.now().replace(microsecond=0)
@@ -67,6 +70,8 @@ class LiveSession:
 
     def stop(self) -> None:
         self.stop_flag.set()
+        if self._player and self._player.poll() is None:
+            self._player.terminate()
 
     # ------------------------------------------------------------------ audio
 
@@ -87,6 +92,12 @@ class LiveSession:
                 assert f.getframerate() == SAMPLE_RATE and f.getnchannels() == 1
                 total = f.getnframes()
                 pos = 0
+                if self.listen:
+                    # speakers and ASR reader start together, both real-time paced
+                    self._player = subprocess.Popen(
+                        ["afplay", str(self.audio_path)],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    )
                 start_wall = time.monotonic()
                 while pos < total and not self.stop_flag.is_set():
                     frames = min(int(CHUNK_S * SAMPLE_RATE), total - pos)
@@ -167,6 +178,8 @@ class LiveSession:
             subprocess.Popen(["say", "-v", "Samantha", g.message.split("—")[0]])
 
     def _finish(self) -> None:
+        if self._player and self._player.poll() is None:
+            self._player.terminate()
         self.queue.put({"kind": "finished", "events": self.events,
                         "guidance": self.router.guidance_log})
         self.queue.put({"kind": "done"})

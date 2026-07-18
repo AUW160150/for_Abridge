@@ -134,6 +134,9 @@
       <option value="live-mic">● LIVE — microphone</option>
     </select>
     <label class="hint" style="display:flex;align-items:center;gap:4px">
+      <input type="checkbox" id="listen" checked> 🔊 listen
+    </label>
+    <label class="hint" style="display:flex;align-items:center;gap:4px">
       <input type="checkbox" id="speak"> voice alerts
     </label>
     <select id="speed">
@@ -289,7 +292,8 @@ $("start").onclick = () => {
   $("asrtext").textContent = "—";
   const url = live
     ? `/api/stream?scenario=live&source=${scen === "live-mic" ? "mic" : "file"}` +
-      `&audio=transcript_x3&speak=${$("speak").checked ? 1 : 0}`
+      `&audio=transcript_x3&speak=${$("speak").checked ? 1 : 0}` +
+      `&listen=${$("listen").checked ? 1 : 0}`
     : `/api/stream?speed=${$("speed").value}&scenario=${scen}`;
   source = new EventSource(url);
   source.onmessage = msg => {
