@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Code Clock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #11161d; --panel2: #161d26; --line: #223041;
+    --text: #dbe4ee; --dim: #7d8fa3;
+    --med: #d8a1f0; --rhythm: #7dd3fc; --shock: #fbbf24; --proc: #92aff5;
+    --assess: #86efac; --mile: #ffffff;
+    --due_soon: #d4b106; --due_now: #f59e0b; --alert: #ef4444; --ok: #34d399;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 14px/1.45 -apple-system, "Segoe UI", sans-serif;
+    height: 100vh; display: flex; flex-direction: column;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+  header {
+    display: flex; align-items: center; gap: 18px;
+    padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  header h1 { font-size: 15px; letter-spacing: .12em; font-weight: 700; }
+  header h1 span { color: var(--alert); }
+  #clock { font-size: 30px; font-weight: 700; letter-spacing: .04em; }
+  .pill {
+    padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+  .pill.live { background: #3b0d0d; color: var(--alert); animation: pulse 1.2s infinite; }
+  .pill.rosc { background: #0d2b1e; color: var(--ok); animation: none; }
+  .pill.idle { background: #1c2733; color: var(--dim); }
+  @keyframes pulse { 50% { opacity: .45; } }
+  .spacer { flex: 1; }
+  select, button {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 5px 10px; font-size: 13px; cursor: pointer;
+  }
+  button:hover { border-color: var(--dim); }
+  .hint { color: var(--dim); font-size: 12px; }
+
+  main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+  section { display: flex; flex-direction: column; min-height: 0; }
+  section + section { border-left: 1px solid var(--line); }
+  section h2 {
+    font-size: 11px; letter-spacing: .14em; color: var(--dim); font-weight: 700;
+    padding: 10px 18px 6px; text-transform: uppercase;
+  }
+  .scroll { flex: 1; overflow-y: auto; padding: 0 14px 24px; }
+
+  .item {
+    border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
+    margin: 6px 0; padding: 8px 12px; cursor: pointer;
+    animation: slidein .25s ease-out;
+  }
+  @keyframes slidein { from { opacity: 0; transform: translateY(6px); } }
+  .item:hover { border-color: var(--dim); }
+  .row { display: flex; align-items: baseline; gap: 10px; }
+  .stamp { color: var(--dim); font-size: 12px; min-width: 44px; }
+  .badge {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 1px 7px; border-radius: 4px; background: #1c2733;
+  }
+  .entity { font-weight: 600; }
+  .dose { color: var(--dim); }
+  .conf { margin-left: auto; color: var(--dim); font-size: 11px; }
+  .lowconf { color: var(--alert); font-weight: 700; }
+
+  .details {
+    display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line);
+    font-size: 12.5px; color: var(--dim);
+  }
+  .item.open .details { display: block; }
+  .details .quote {
+    color: var(--text); background: var(--panel2); border-left: 3px solid var(--dim);
+    padding: 6px 10px; border-radius: 0 6px 6px 0; margin: 5px 0; font-style: italic;
+  }
+  .details .label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; margin-top: 7px; }
+
+  .g-item { border-left: 4px solid var(--dim); }
+  .g-item.due_soon { border-left-color: var(--due_soon); }
+  .g-item.due_now  { border-left-color: var(--due_now); }
+  .g-item.alert    { border-left-color: var(--alert); background: #1a1013; animation: flash .6s 3; }
+  @keyframes flash { 50% { background: #3b0d0d; } }
+  .g-msg { font-weight: 600; }
+  .g-item.alert .g-msg { color: #ff8080; }
+  .urg { font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+  .urg.due_soon { color: var(--due_soon); } .urg.due_now { color: var(--due_now); }
+  .urg.alert { color: var(--alert); } .urg.info { color: var(--dim); }
+  .item.resolved { opacity: .35; }
+  .item.resolved .g-msg { text-decoration: line-through; }
+
+  #recordwrap { display: none; border-top: 1px solid var(--line); background: var(--panel); padding: 12px 18px; max-height: 38vh; overflow-y: auto; }
+  #recordwrap h2 { font-size: 11px; letter-spacing: .14em; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+  #record { font-size: 12.5px; white-space: pre; }
+  #record .alertline { color: var(--alert); font-weight: 700; }
+  .empty { color: var(--dim); font-size: 13px; padding: 18px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>CODE <span>CLOCK</span></h1>
+    <div id="clock" class="mono">00:00</div>
+    <div id="status" class="pill idle">standby</div>
+    <div class="spacer"></div>
+    <span class="hint">click any event or prompt to reveal its source</span>
+    <select id="speed">
+      <option value="2">2× speed</option>
+      <option value="8" selected>8× speed</option>
+      <option value="20">20× speed</option>
+    </select>
+    <button id="start">▶ Start code</button>
+  </header>
+
+  <main>
+    <section>
+      <h2>Event timeline — hands-free</h2>
+      <div class="scroll" id="timeline"><div class="empty">Press “Start code” to begin the replay.</div></div>
+    </section>
+    <section>
+      <h2>Guidance — protocol engine</h2>
+      <div class="scroll" id="guidance"><div class="empty">The agent’s prompts appear here as rules fire.</div></div>
+    </section>
+  </main>
+
+  <div id="recordwrap">
+    <h2>Code record — auto-generated <button id="download" style="float:right">Download</button></h2>
+    <div id="record" class="mono"></div>
+  </div>
+
+<script>
+const TYPE_COLORS = { medication:"--med", rhythm_check:"--rhythm", shock:"--shock",
+                      procedure:"--proc", assessment:"--assess", milestone:"--mile" };
+const events = {};          // id -> event
+let source = null, recordText = "";
+
+const $ = id => document.getElementById(id);
+const mmss = t => `${String(Math.floor(t/60)).padStart(2,"0")}:${String(Math.floor(t%60)).padStart(2,"0")}`;
+
+function append(container, el) {
+  const box = $(container);
+  box.querySelector(".empty")?.remove();
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addEvent(e) {
+  events[e.id] = e;
+  const color = `var(${TYPE_COLORS[e.type] || "--text"})`;
+  const low = e.confidence < 0.75;
+  const el = document.createElement("div");
+  el.className = "item"; el.id = e.id;
+  el.innerHTML = `
+    <div class="row">
+      <span class="stamp mono">${mmss(e.t)}</span>
+      <span class="badge" style="color:${color}">${e.type.replace("_"," ")}</span>
+      <span class="entity">${e.entity}</span>
+      ${e.dose ? `<span class="dose">${e.dose}</span>` : ""}
+      <span class="conf ${low ? "lowconf" : ""}">${low ? "⚠ " : ""}conf ${e.confidence.toFixed(2)}</span>
+    </div>
+    <div class="details">
+      <div class="label">heard</div>
+      <div class="quote">“${e.source}”</div>
+      ${low ? `<div class="lowconf">Low confidence — please confirm this entry.</div>` : ""}
+      <div class="label">event id</div><span class="mono">${e.id}</span>
+    </div>`;
+  el.onclick = () => el.classList.toggle("open");
+  append("timeline", el);
+}
+
+function addGuidance(g) {
+  const el = document.createElement("div");
+  el.className = `item g-item ${g.urgency}`; el.id = g.id;
+  const triggers = g.trigger_ids.map(id => events[id]).filter(Boolean);
+  el.innerHTML = `
+    <div class="row">
+      <span class="stamp mono">${mmss(g.t)}</span>
+      <span class="urg ${g.urgency}">${g.urgency.replace("_"," ").toUpperCase()}</span>
+      <span class="g-msg">${g.message}</span>
+    </div>
+    <div class="details">
+      <div class="label">why — protocol rule</div>
+      <div><span class="mono">${g.rule_id}</span> — ${g.rule_desc}</div>
+      <div class="label">guideline</div>
+      <div>${g.rule_source}</div>
+      <div class="label">${triggers.length ? "triggered by — exact utterances heard" : "triggered by"}</div>
+      ${triggers.length
+        ? triggers.map(t => `<div class="quote">[${mmss(t.t)}] “${t.source}”</div>`).join("")
+        : `<div>elapsed-time rule (clock-driven)</div>`}
+    </div>`;
+  el.onclick = () => el.classList.toggle("open");
+  append("guidance", el);
+}
+
+function showRecord(r) {
+  const lines = r.lines.map(l =>
+    `  ${mmss(l.t)}  ${l.type.padEnd(13)} ${l.entity}${l.dose ? " " + l.dose : ""}` +
+    (l.low_confidence ? "  [LOW CONFIDENCE — confirm]" : "")).join("\n");
+  const alerts = r.alerts.map(a => `  ALERT: ${a.message}  [${a.rule_id}]`).join("\n");
+  recordText =
+    `CODE RECORD (auto-generated, hands-free)\n${"=".repeat(56)}\n${lines}\n` +
+    `${"-".repeat(56)}\n  totals: ${r.totals.epi}x epinephrine, ${r.totals.shocks} shocks, ` +
+    `${r.totals.guidance} prompts (${r.totals.alerts} alerts)\n${alerts}\n`;
+  $("record").innerHTML = recordText
+    .split("\n")
+    .map(l => l.trim().startsWith("ALERT:") ? `<span class="alertline">${l}</span>` : l)
+    .join("\n");
+  $("recordwrap").style.display = "block";
+}
+
+$("download").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([recordText], { type: "text/plain" }));
+  a.download = "code-record.txt";
+  a.click();
+};
+
+$("start").onclick = () => {
+  source?.close();
+  $("timeline").innerHTML = ""; $("guidance").innerHTML = "";
+  $("recordwrap").style.display = "none";
+  for (const k in events) delete events[k];
+  $("status").className = "pill live"; $("status").textContent = "● live";
+  $("start").textContent = "↻ Restart";
+
+  source = new EventSource(`/api/stream?speed=${$("speed").value}`);
+  source.onmessage = msg => {
+    const d = JSON.parse(msg.data);
+    if (d.kind === "tick") $("clock").textContent = mmss(d.t);
+    else if (d.kind === "event") addEvent(d.event);
+    else if (d.kind === "guidance") addGuidance(d.guidance);
+    else if (d.kind === "resolve") d.ids.forEach(id => $(id)?.classList.add("resolved"));
+    else if (d.kind === "status" && d.status === "rosc") {
+      $("status").className = "pill rosc"; $("status").textContent = "✓ ROSC";
+    }
+    else if (d.kind === "record") { showRecord(d); source.close(); }
+  };
+  source.onerror = () => source.close();
+};
+</script>
+</body>
+</html>

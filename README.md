@@ -32,7 +32,17 @@ export ANTHROPIC_API_KEY=sk-ant-...   # or: ant auth login
 ```bash
 python phase0_demo.py     # Phase 0: one hardcoded event end-to-end, no API
 python run_extractor.py   # Phase 1: stream data/transcript.txt through Claude
+python -m pytest tests/   # Phase 2: protocol engine unit tests (no LLM)
+python run_pipeline.py    # Phase 3: full pipeline replay in the console
+python server.py          # Phase 4: live view -> http://127.0.0.1:5057
 ```
+
+The live view replays the code in real time (time-scaled): the timeline
+assembles hands-free, guidance fires from the protocol engine, satisfied
+prompts gray out, alerts stay pinned, and clicking any event or prompt
+reveals the exact utterance heard plus the protocol rule that fired. At code
+end it emits the downloadable code record. Extraction results are cached in
+data/events.json; pass --fresh to run_pipeline.py to re-extract.
 
 The scripted transcript (`data/transcript.txt`) seeds one deliberate protocol
 deviation — epi #2 given 5:10 after epi #1, outside the ACLS 3-5 min window —

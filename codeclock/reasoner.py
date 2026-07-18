@@ -22,6 +22,7 @@ class Reasoner:
         self.engine = engine or ProtocolEngine()
         self.guidance_log: list[Guidance] = []
         self._issued: dict[str, int] = {}  # finding key -> highest severity rank issued
+        self.key_for: dict[str, str] = {}  # guidance id -> finding key (for UI resolution)
 
     def on_event(self, event: ClinicalEvent) -> list[Guidance]:
         return self._convert(self.engine.ingest(event), event.timestamp)
@@ -44,5 +45,6 @@ class Reasoner:
                 issued_at=now,
             )
             self.guidance_log.append(guidance)
+            self.key_for[guidance.id] = f.key
             issued.append(guidance)
         return issued
