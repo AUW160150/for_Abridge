@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from .models import ClinicalEvent
+from .models import ClinicalEvent, Guidance
+from .rules import RULES
 
 LOW_CONFIDENCE_THRESHOLD = 0.75
 
@@ -45,3 +46,31 @@ def format_event(event: ClinicalEvent, code_start: datetime) -> str:
 
 def print_event(event: ClinicalEvent, code_start: datetime) -> None:
     print(format_event(event, code_start))
+
+
+_URGENCY_COLORS = {
+    "info": _DIM,
+    "due_soon": "\033[33m",      # yellow
+    "due_now": "\033[1;93m",     # bold yellow
+    "alert": "\033[1;91m",       # bold red
+}
+
+
+def format_guidance(guidance: Guidance, code_start: datetime) -> str:
+    color = _URGENCY_COLORS.get(guidance.urgency, "")
+    total = int((guidance.issued_at - code_start).total_seconds())
+    stamp = f"{total // 60:02d}:{total % 60:02d}"
+    events = ", ".join(guidance.triggering_event_ids) or "-"
+    rule = RULES.get(guidance.rule_id)
+    source = rule.guideline_source if rule else "unknown rule"
+    return "\n".join(
+        [
+            f"[{stamp}]   {color}▶ {guidance.urgency.upper()}: {guidance.message}{_RESET}",
+            f"           {_DIM}rule: {guidance.rule_id} · events: {events}{_RESET}",
+            f"           {_DIM}per: {source}{_RESET}",
+        ]
+    )
+
+
+def print_guidance(guidance: Guidance, code_start: datetime) -> None:
+    print(format_guidance(guidance, code_start))
