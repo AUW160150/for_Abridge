@@ -22,11 +22,24 @@ TRANSCRIPT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data/transcript.t
 NO_CREDENTIALS_MSG = (
     "No Anthropic credentials found.\n"
     "Set one with:  export ANTHROPIC_API_KEY=sk-ant-...\n"
+    "put ANTHROPIC_API_KEY=sk-ant-... in a .env file next to this script,\n"
     "or log in via: ant auth login"
 )
 
 
+def _load_dotenv() -> None:
+    env_file = Path(__file__).parent / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip().strip('"'))
+
+
 def main() -> None:
+    _load_dotenv()
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
         # The SDK can also resolve an `ant auth login` profile; only bail if
         # constructing a client would fail outright.
