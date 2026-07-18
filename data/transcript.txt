@@ -1,0 +1,28 @@
+# Scripted code-blue transcript (~8.5 min compressed).
+# Format: [MM:SS elapsed] SPEAKER: utterance
+# Seeded protocol deviation for the hero catch: epi #2 at 07:55 is 5:10 after
+# epi #1 at 02:45 — outside the ACLS 3-5 minute window (rule acls_epi_interval).
+# TODO before demo: sanity-check timings with clinicians on the floor.
+
+[00:00] CODE LEADER: Time is fourteen thirty-two, we have a code blue. No pulse — starting compressions.
+[00:12] NURSE 1: CPR in progress, she's pulseless.
+[00:40] NURSE 2: Pads are on. We've got IV access, right AC.
+[01:05] RESP THERAPIST: Bagging her now, good chest rise.
+[01:58] CODE LEADER: Hold compressions — rhythm check.
+[02:03] CODE LEADER: That's v-fib. Back on the chest, charging to two hundred.
+[02:14] NURSE 2: Charged to two hundred.
+[02:17] CODE LEADER: Everybody clear... shocking. Shock delivered, resume CPR.
+[02:45] NURSE 1: Pushing an amp of epi now — one milligram.
+[02:52] RECORDER: Copy, epi one milligram in at two forty-five.
+[03:58] CODE LEADER: Hold CPR — rhythm check. Still in v-fib. Charging to two hundred.
+[04:09] CODE LEADER: Clear. Shock's delivered, back on the chest.
+[04:22] CODE LEADER: She's refractory — let's draw up amiodarone, three hundred milligrams.
+[04:41] NURSE 1: Amiodarone three hundred is in.
+[05:58] CODE LEADER: Hold compressions — rhythm check... okay, that looks like asystole now. No shock, resume compressions.
+[06:14] NURSE 2: Want another epi drawn up?
+[06:19] CODE LEADER: Hold on, let's get this airway secured first.
+[06:45] RESP THERAPIST: Tube's in, seven-point-five at twenty-two at the lip. Good color change.
+[07:55] NURSE 1: Second epi going in now, one milligram.
+[08:02] RECORDER: Epi number two at seven fifty-five.
+[08:24] CODE LEADER: Rhythm check — hold CPR... we've got an organized rhythm. Checking pulse... there's a pulse. We have ROSC.
+[08:36] CODE LEADER: Time of ROSC fourteen forty. Nice work — let's move to post-arrest care and get a twelve-lead.

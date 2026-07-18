@@ -1,0 +1,7 @@
+# virtual env
+abridge/
+
+__pycache__/
+*.pyc
+.env
+.DS_Store
