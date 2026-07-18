@@ -104,6 +104,15 @@ def test_no_shock_prompt_on_asystole():
     assert "acls_shock_shockable" not in rule_ids(engine.poll(at(2, 10)))
 
 
+def test_aed_voice_prompts_classify_rhythm():
+    engine = started_engine()
+    engine.ingest(ev(2, 0, "rhythm_check", "shock advised"))
+    assert "acls_shock_shockable" in rule_ids(engine.poll(at(2, 5)))
+    engine.ingest(ev(2, 20, "shock", "defibrillation"))
+    engine.ingest(ev(4, 0, "rhythm_check", "no shock advised"))
+    assert "acls_shock_shockable" not in rule_ids(engine.poll(at(4, 10)))
+
+
 def test_shock_on_non_shockable_rhythm_alerts():
     engine = started_engine()
     engine.ingest(ev(2, 0, "rhythm_check", "asystole"))

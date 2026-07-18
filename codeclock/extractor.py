@@ -97,6 +97,16 @@ asystole, "pulse-less" for pulseless). When context makes the intended term \
 clear, normalize entity to the correct clinical term but keep \
 source_utterance verbatim as heard, and lower confidence to reflect the \
 ambiguity.
+- Real-world EMS/bodycam audio: AED/monitor voice prompts are loggable — \
+"shock advised" is a rhythm_check with entity 'shock advised' (the device \
+classified the rhythm as shockable); "no shock advised" is a rhythm_check \
+with entity 'no shock advised'. The advisory itself is NOT a delivered \
+shock — log a shock only when delivery is evident ("shock delivered", \
+"everybody clear" followed by confirmation, or "delivering shock" from the \
+device). "I've got a pulse" / "we have pulses" is ROSC. Contemporaneous \
+third-person narration of an action happening now ("they're pushing epi") \
+is loggable; retrospective summary ("they had shocked her twice earlier") \
+is not.
 - timestamp is the [MM:SS] marker of that line.
 - Milestones: code start (entity 'code start' for an arrest, 'code stroke' for \
 a stroke activation), ROSC, time of death. If a wall-clock time is stated \

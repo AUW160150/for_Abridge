@@ -1,0 +1,92 @@
+{
+  "started_at": "2026-07-18T19:31:19",
+  "source": "file",
+  "timescale": 3.0,
+  "heard": [
+    {
+      "t": 0,
+      "text": "Time is 14.32, we have a code blue, no pulse, starting compressions."
+    },
+    {
+      "t": 39,
+      "text": "PEDS are on, we've got IV-axis, right?"
+    },
+    {
+      "t": 48,
+      "text": "What I see."
+    },
+    {
+      "t": 64,
+      "text": "Bagging her now, good chest rise."
+    },
+    {
+      "t": 91,
+      "text": "Thank you."
+    },
+    {
+      "t": 114,
+      "text": "Hold compress-"
+    }
+  ],
+  "events": [
+    {
+      "t": 0.0,
+      "type": "milestone",
+      "entity": "code start",
+      "dose": null,
+      "value": "14:32",
+      "source_utterance": "Time is 14.32, we have a code blue, no pulse, starting compressions.",
+      "confidence": 0.97
+    },
+    {
+      "t": 0.0,
+      "type": "assessment",
+      "entity": "pulseless",
+      "dose": null,
+      "value": null,
+      "source_utterance": "Time is 14.32, we have a code blue, no pulse, starting compressions.",
+      "confidence": 0.9
+    },
+    {
+      "t": 0.0,
+      "type": "procedure",
+      "entity": "chest compressions",
+      "dose": null,
+      "value": null,
+      "source_utterance": "Time is 14.32, we have a code blue, no pulse, starting compressions.",
+      "confidence": 0.95
+    },
+    {
+      "t": 64.0,
+      "type": "procedure",
+      "entity": "bag-mask ventilation",
+      "dose": null,
+      "value": null,
+      "source_utterance": "Bagging her now, good chest rise.",
+      "confidence": 0.85
+    }
+  ],
+  "guidance": [
+    {
+      "t": 105.0,
+      "urgency": "due_soon",
+      "message": "Rhythm check coming up \u2014 1:45 since last check.",
+      "rule_id": "acls_rhythm_check_interval",
+      "rubric_id": "acls_cardiac_arrest"
+    },
+    {
+      "t": 120.0,
+      "urgency": "due_now",
+      "message": "Rhythm check due \u2014 2:00 since last check.",
+      "rule_id": "acls_rhythm_check_interval",
+      "rubric_id": "acls_cardiac_arrest"
+    }
+  ],
+  "rubric_activations": [
+    {
+      "t": 0.0,
+      "rubric_id": "acls_cardiac_arrest",
+      "reason": "matched evidence \"code blue\" in: 'Time is 14.32, we have a code blue, no pulse, starting compressions.'"
+    }
+  ]
+}

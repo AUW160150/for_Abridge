@@ -64,6 +64,8 @@ class LiveSession:
         self.router = ProtocolRouter()
         self._last_tick = -1
         self.events: list[ClinicalEvent] = []
+        self.asr_log: list[dict] = []
+        self._dumped = False
 
     def start(self) -> None:
         threading.Thread(target=self._run, daemon=True).start()
@@ -72,6 +74,7 @@ class LiveSession:
         self.stop_flag.set()
         if self._player and self._player.poll() is None:
             self._player.terminate()
+        self._dump()
 
     # ------------------------------------------------------------------ audio
 
@@ -138,6 +141,7 @@ class LiveSession:
                     start = seg.words[0].start if seg.words else seg.start
                     sim_s = int((chunk_start + start) * self.timescale)
                     lines.append(TranscriptLine(offset_seconds=sim_s, text=text))
+                    self.asr_log.append({"t": sim_s, "text": text})
                     self.queue.put({"kind": "asr", "t": sim_s, "text": text})
                 self._process(lines, chunk_end_sim=int((chunk_start + CHUNK_S) * self.timescale))
 
@@ -180,6 +184,50 @@ class LiveSession:
     def _finish(self) -> None:
         if self._player and self._player.poll() is None:
             self._player.terminate()
+        self._dump()
         self.queue.put({"kind": "finished", "events": self.events,
                         "guidance": self.router.guidance_log})
         self.queue.put({"kind": "done"})
+
+    def _dump(self) -> None:
+        """Save the full session (heard / extracted / prompted) for post-hoc
+        review — e.g. comparing agent guidance against what a real crew did."""
+        if self._dumped or not self.asr_log:
+            return
+        self._dumped = True
+        import json
+
+        out_dir = Path("data/live_sessions")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        stamp = self.code_start.strftime("%Y%m%d-%H%M%S")
+        payload = {
+            "started_at": self.code_start.isoformat(),
+            "source": self.source,
+            "timescale": self.timescale,
+            "heard": self.asr_log,
+            "events": [
+                {
+                    "t": (e.timestamp - self.code_start).total_seconds(),
+                    "type": e.type, "entity": e.entity, "dose": e.dose,
+                    "value": e.value, "source_utterance": e.source_utterance,
+                    "confidence": e.confidence,
+                }
+                for e in self.events
+            ],
+            "guidance": [
+                {
+                    "t": (g.issued_at - self.code_start).total_seconds(),
+                    "urgency": g.urgency, "message": g.message,
+                    "rule_id": g.rule_id, "rubric_id": g.rubric_id,
+                }
+                for g in self.router.guidance_log
+            ],
+            "rubric_activations": [
+                {
+                    "t": (a.activated_at - self.code_start).total_seconds(),
+                    "rubric_id": a.rubric_id, "reason": a.reason,
+                }
+                for a in self.router.activations
+            ],
+        }
+        (out_dir / f"session-{stamp}.json").write_text(json.dumps(payload, indent=2))

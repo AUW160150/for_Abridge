@@ -21,8 +21,10 @@ AMIODARONE_MAX_TOTAL_MG = 450.0   # dose ceiling — alert if exceeded
 REFRACTORY_SHOCK_COUNT = 2        # shocks on a shockable rhythm before amio is suggested
 
 # --- Rhythm classification -------------------------------------------------
-SHOCKABLE_RHYTHMS = {"vf", "pvt"}
-NON_SHOCKABLE_RHYTHMS = {"asystole", "pea", "organized"}
+# "shockable"/"nonshockable" cover AED voice prompts ("shock advised") that
+# classify the rhythm without naming it — common in real EMS / bodycam audio.
+SHOCKABLE_RHYTHMS = {"vf", "pvt", "shockable"}
+NON_SHOCKABLE_RHYTHMS = {"asystole", "pea", "organized", "nonshockable"}
 
 RHYTHM_SYNONYMS = {
     "vf": "vf", "v-fib": "vf", "vfib": "vf", "ventricular fibrillation": "vf",
@@ -32,6 +34,10 @@ RHYTHM_SYNONYMS = {
     "pea": "pea", "pulseless electrical activity": "pea",
     "organized rhythm": "organized", "organized": "organized",
     "sinus rhythm": "organized", "sinus": "organized",
+    "shockable (aed)": "shockable", "shock advised": "shockable",
+    "shockable": "shockable",
+    "non-shockable (aed)": "nonshockable", "no shock advised": "nonshockable",
+    "non-shockable": "nonshockable", "nonshockable": "nonshockable",
 }
 
 MED_SYNONYMS = {
