@@ -127,12 +127,12 @@
     <div class="spacer"></div>
     <a href="/record" class="hint" style="text-decoration:none">code record ↗</a>
     <a href="/rubrics" class="hint" style="text-decoration:none">rubrics &amp; eval ↗</a>
-    <span class="hint">click any event or prompt to reveal its source</span>
+    <span class="hint">video first; run audio when ready</span>
     <select id="scenario">
-      <option value="arrest" selected>Cardiac arrest (replay)</option>
+      <option value="live-bodycam" selected>● Body-cam video + truncated audio</option>
       <option value="stroke">Stroke → arrest (replay)</option>
       <option value="live-file">● LIVE — demo audio</option>
-      <option value="live-bodycam">● LIVE — real body-cam clip</option>
+      <option value="arrest">Cardiac arrest (replay)</option>
       <option value="live-mic">● LIVE — microphone</option>
     </select>
     <label class="hint" style="display:flex;align-items:center;gap:4px">
@@ -147,7 +147,7 @@
       <option value="20">20× speed</option>
       <option value="60">60× speed</option>
     </select>
-    <button id="start">▶ Start code</button>
+    <button id="start">Load audio</button>
     <button id="pause">Pause</button>
     <button id="reload">Reload</button>
     <button id="quick">Quick result</button>
@@ -171,14 +171,16 @@
         <audio id="demoaudio" controls preload="metadata"></audio>
       </div>
     </section>
-    <section>
-      <h2>Event timeline — hands-free</h2>
-      <div class="scroll" id="timeline"><div class="empty">Press “Start code” to begin the replay.</div></div>
-    </section>
-    <section>
-      <h2>Guidance — protocol engine</h2>
-      <div class="scroll" id="guidance"><div class="empty">The agent’s prompts appear here as rules fire.</div></div>
-    </section>
+    <div id="workspace">
+      <section>
+        <h2>Event timeline — hands-free</h2>
+        <div class="scroll" id="timeline"><div class="empty">Load audio to run the truncated live transcript, or choose Quick result.</div></div>
+      </section>
+      <section>
+        <h2>Guidance — protocol engine</h2>
+        <div class="scroll" id="guidance"><div class="empty">Protocol prompts and linked evidence appear here.</div></div>
+      </section>
+    </div>
   </main>
 
   <div id="recordwrap">
@@ -207,8 +209,10 @@ function pauseDemo() {
   source = null;
   $("demoaudio").pause();
   $("livevideo").pause();
+  $("youtubevideo").src = $("youtubevideo").src;
   $("status").className = "pill idle";
   $("status").textContent = "paused";
+  $("asrtext").textContent = "paused";
 }
 
 async function configureMedia(scenario, autoplay = false) {
@@ -377,19 +381,21 @@ $("download").onclick = () => {
 };
 
 $("start").onclick = () => {
-  startScenario($("scenario").value, $("speed").value, true);
+  const scen = $("scenario").value === "arrest" ? "live-bodycam" : $("scenario").value;
+  startScenario(scen, $("speed").value, true);
 };
 
-function startScenario(scen, speed, autoplayMedia) {
-  source?.close();
+function startScenario(scen, speed, autoplayMedia, mediaScenario = scen) {
+  pauseDemo();
   $("timeline").innerHTML = ""; $("guidance").innerHTML = "";
   $("rubrics").innerHTML = "";
   $("recordwrap").style.display = "none";
   for (const k in events) delete events[k];
   $("status").className = "pill live"; $("status").textContent = "● live";
-  $("start").textContent = "↻ Restart";
+  $("start").textContent = "Reload audio";
 
-  configureMedia(scen, autoplayMedia);
+  configureMedia(mediaScenario, autoplayMedia);
+  $("workspace").scrollIntoView({ behavior: "smooth", block: "start" });
   const live = scen.startsWith("live");
   $("asrbar").style.display = live ? "block" : "none";
   $("asrtext").textContent = "—";
@@ -421,9 +427,9 @@ function startScenario(scen, speed, autoplayMedia) {
 $("pause").onclick = pauseDemo;
 $("reload").onclick = () => startScenario($("scenario").value, $("speed").value, true);
 $("quick").onclick = () => {
-  const quickScenario = $("scenario").value === "stroke" ? "stroke" : "arrest";
-  $("speed").value = "60";
-  startScenario(quickScenario, "60", false);
+  pauseDemo();
+  $("speed").value = "20";
+  startScenario("arrest", "20", false, "live-bodycam");
 };
 configureMedia($("scenario").value);
 $("scenario").onchange = () => configureMedia($("scenario").value);
