@@ -211,6 +211,7 @@ class LiveSession:
             "heard": self.asr_log,
             "events": [
                 {
+                    "id": e.id,
                     "t": (e.timestamp - self.code_start).total_seconds(),
                     "type": e.type, "entity": e.entity, "dose": e.dose,
                     "value": e.value, "source_utterance": e.source_utterance,
@@ -223,6 +224,7 @@ class LiveSession:
                     "t": (g.issued_at - self.code_start).total_seconds(),
                     "urgency": g.urgency, "message": g.message,
                     "rule_id": g.rule_id, "rubric_id": g.rubric_id,
+                    "triggering_event_ids": g.triggering_event_ids,
                 }
                 for g in self.router.guidance_log
             ],

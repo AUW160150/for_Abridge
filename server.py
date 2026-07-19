@@ -54,6 +54,8 @@ def api_record():
     from run_eval import replay_guidance
 
     scenario = request.args.get("scenario", "arrest")
+    if scenario == "live":
+        return _live_record()
     transcript, cache = SCENARIOS.get(scenario, SCENARIOS["arrest"])
     events, code_start = load_or_extract(transcript, cache)
     events.sort(key=lambda e: e.timestamp)
@@ -85,6 +87,43 @@ def api_record():
             "events": len(events),
             "guidance": len(router.guidance_log),
             "low_confidence": sum(1 for e in events if e.confidence < 0.75),
+        },
+    }
+
+
+def _live_record():
+    """Build the record payload from the most recent live session dump."""
+    import json as _json
+
+    dumps = sorted(Path("data/live_sessions").glob("session-*.json"))
+    if not dumps:
+        return {"scenario": "live", "events": [], "alerts": [], "activations": [],
+                "totals": {"events": 0, "guidance": 0, "low_confidence": 0},
+                "note": "no live sessions recorded yet"}
+    d = _json.loads(dumps[-1].read_text())
+    events = d.get("events", [])
+    guidance = d.get("guidance", [])
+    for i, e in enumerate(events):
+        e.setdefault("id", f"live_{i}")
+        e["source"] = e.pop("source_utterance", "")
+        e["low_confidence"] = e.get("confidence", 1.0) < 0.75
+    return {
+        "scenario": f"live ({dumps[-1].stem})",
+        "events": events,
+        "activations": [
+            {"rubric_id": a["rubric_id"], "t": a["t"]}
+            for a in d.get("rubric_activations", [])
+        ],
+        "alerts": [
+            {"t": g["t"], "message": g["message"], "rule_id": g["rule_id"],
+             "rubric_id": g.get("rubric_id", ""),
+             "trigger_ids": g.get("triggering_event_ids", [])}
+            for g in guidance if g["urgency"] == "alert"
+        ],
+        "totals": {
+            "events": len(events),
+            "guidance": len(guidance),
+            "low_confidence": sum(1 for e in events if e["low_confidence"]),
         },
     }
 
