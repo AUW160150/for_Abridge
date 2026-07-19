@@ -349,6 +349,15 @@ table,
   overflow: auto;
 }
 
+#recordwrap.collapsed {
+  max-height: none;
+  padding-bottom: 8px;
+}
+
+#recordwrap.collapsed #record {
+  display: none;
+}
+
 #visual {
   min-height: calc(100vh - 72px);
   background: #eef2f6;
@@ -411,8 +420,29 @@ table,
 
 #workspace {
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
+  grid-template-columns: minmax(260px, 50fr) 8px minmax(280px, 50fr);
   min-height: 72vh;
+}
+
+#workspace > section {
+  min-width: 0;
+}
+
+#splitter {
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+#splitter:hover,
+#splitter:focus-visible {
+  background: var(--cyan);
+  outline: 0;
+}
+
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .video-state {
@@ -495,6 +525,10 @@ tr.low {
 
   #workspace {
     grid-template-columns: 1fr;
+  }
+
+  #splitter {
+    display: none;
   }
 
   section + section {
