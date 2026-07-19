@@ -136,7 +136,7 @@
       <option value="live-mic">● LIVE — microphone</option>
     </select>
     <label class="hint" style="display:flex;align-items:center;gap:4px">
-      <input type="checkbox" id="listen" checked> 🔊 listen
+      <input type="checkbox" id="listen"> server audio
     </label>
     <label class="hint" style="display:flex;align-items:center;gap:4px">
       <input type="checkbox" id="speak"> voice alerts
@@ -148,6 +148,9 @@
       <option value="60">60× speed</option>
     </select>
     <button id="start">▶ Start code</button>
+    <button id="pause">Pause</button>
+    <button id="reload">Reload</button>
+    <button id="quick">Quick result</button>
   </header>
   <div id="asrbar"><b>HEARD</b> <span id="asrtext">—</span></div>
 
@@ -163,6 +166,9 @@
           <span class="video-state"><span id="videodot" class="video-dot"></span><span id="videostatus">Body-cam video loads for the real clip scenario</span></span>
           <span class="mono video-local">VIDEO</span>
         </div>
+      </div>
+      <div class="media-controls">
+        <audio id="demoaudio" controls preload="metadata"></audio>
       </div>
     </section>
     <section>
@@ -196,15 +202,28 @@ function append(container, el) {
   box.scrollTop = box.scrollHeight;
 }
 
-async function configureVideo(scenario, autoplay = false) {
+function pauseDemo() {
+  source?.close();
+  source = null;
+  $("demoaudio").pause();
+  $("livevideo").pause();
+  $("status").className = "pill idle";
+  $("status").textContent = "paused";
+}
+
+async function configureMedia(scenario, autoplay = false) {
   const local = $("livevideo");
   const youtube = $("youtubevideo");
+  const audio = $("demoaudio");
   local.pause();
   local.removeAttribute("src");
   local.load();
   youtube.removeAttribute("src");
   local.style.display = "none";
   youtube.style.display = "none";
+  audio.pause();
+  audio.removeAttribute("src");
+  audio.load();
   $("videodot").classList.remove("on");
 
   if (scenario === "live-bodycam") {
@@ -216,12 +235,21 @@ async function configureVideo(scenario, autoplay = false) {
       $("videodot").classList.add("on");
       $("videostatus").textContent = "Local body-cam clip ready";
       if (autoplay) local.play().catch(() => {});
-      return;
+    } else {
+      youtube.src = `https://www.youtube.com/embed/p_Fp2hhUPK8?rel=0${autoplay ? "&autoplay=1&mute=1" : ""}`;
+      youtube.style.display = "block";
+      $("videodot").classList.add("on");
+      $("videostatus").textContent = "Body-cam clip ready from YouTube";
     }
-    youtube.src = `https://www.youtube.com/embed/p_Fp2hhUPK8?rel=0${autoplay ? "&autoplay=1&mute=1" : ""}`;
-    youtube.style.display = "block";
-    $("videodot").classList.add("on");
-    $("videostatus").textContent = "Body-cam clip ready from YouTube";
+    audio.src = "/media/audio/bodycam";
+    if (autoplay) audio.play().catch(() => {});
+    return;
+  }
+
+  if (scenario === "live-file") {
+    audio.src = "/media/audio/transcript_x3";
+    if (autoplay) audio.play().catch(() => {});
+    $("videostatus").textContent = "Demo audio ready";
     return;
   }
 
@@ -349,6 +377,10 @@ $("download").onclick = () => {
 };
 
 $("start").onclick = () => {
+  startScenario($("scenario").value, $("speed").value, true);
+};
+
+function startScenario(scen, speed, autoplayMedia) {
   source?.close();
   $("timeline").innerHTML = ""; $("guidance").innerHTML = "";
   $("rubrics").innerHTML = "";
@@ -357,8 +389,7 @@ $("start").onclick = () => {
   $("status").className = "pill live"; $("status").textContent = "● live";
   $("start").textContent = "↻ Restart";
 
-  const scen = $("scenario").value;
-  configureVideo(scen, true);
+  configureMedia(scen, autoplayMedia);
   const live = scen.startsWith("live");
   $("asrbar").style.display = live ? "block" : "none";
   $("asrtext").textContent = "—";
@@ -367,7 +398,7 @@ $("start").onclick = () => {
     ? `/api/stream?scenario=live&source=${scen === "live-mic" ? "mic" : "file"}` +
       `&audio=${audio}&speak=${$("speak").checked ? 1 : 0}` +
       `&listen=${$("listen").checked ? 1 : 0}`
-    : `/api/stream?speed=${$("speed").value}&scenario=${scen}`;
+    : `/api/stream?speed=${speed}&scenario=${scen}`;
   source = new EventSource(url);
   source.onmessage = msg => {
     const d = JSON.parse(msg.data);
@@ -385,9 +416,17 @@ $("start").onclick = () => {
     else if (d.kind === "record") { showRecord(d); source.close(); }
   };
   source.onerror = () => source.close();
+}
+
+$("pause").onclick = pauseDemo;
+$("reload").onclick = () => startScenario($("scenario").value, $("speed").value, true);
+$("quick").onclick = () => {
+  const quickScenario = $("scenario").value === "stroke" ? "stroke" : "arrest";
+  $("speed").value = "60";
+  startScenario(quickScenario, "60", false);
 };
-configureVideo($("scenario").value);
-$("scenario").onchange = () => configureVideo($("scenario").value);
+configureMedia($("scenario").value);
+$("scenario").onchange = () => configureMedia($("scenario").value);
 </script>
 </body>
 </html>

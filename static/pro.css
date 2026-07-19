@@ -121,6 +121,9 @@ a:focus-visible {
 }
 
 #start,
+#pause,
+#reload,
+#quick,
 #load,
 #export,
 #exporttxt,
@@ -303,6 +306,15 @@ table,
   flex: 1;
   min-height: 0;
   padding: 4px 16px 28px;
+}
+
+.media-controls {
+  padding: 0 16px 18px;
+}
+
+.media-controls audio {
+  width: 100%;
+  height: 34px;
 }
 
 #livevideo,

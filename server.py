@@ -57,9 +57,27 @@ def bodycam_video():
         Path("data/private/bodycam.webm"),
         Path("data/bodycam.mp4"),
         Path("static/bodycam.mp4"),
+        Path(
+            "/Users/Rodela1/Downloads/"
+            "YTDown.com_YouTube_Cardiac-Arrest-Full-Length-Body-Cam-Vide_"
+            "Media_p_Fp2hhUPK8_002_480p.mp4"
+        ),
     ):
         if path.exists():
             return send_file(path, conditional=True)
+    abort(404)
+
+
+@app.route("/media/audio/<name>")
+def media_audio(name: str):
+    allowed = {
+        "bodycam": Path("data/audio/bodycam.wav"),
+        "transcript": Path("data/audio/transcript.wav"),
+        "transcript_x3": Path("data/audio/transcript_x3.wav"),
+    }
+    path = allowed.get(name)
+    if path and path.exists():
+        return send_file(path, conditional=True)
     abort(404)
 
 
