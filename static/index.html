@@ -141,9 +141,6 @@
     <label class="hint" style="display:flex;align-items:center;gap:4px">
       <input type="checkbox" id="speak"> voice alerts
     </label>
-    <label class="hint" style="display:flex;align-items:center;gap:4px">
-      <input type="checkbox" id="camera" checked> camera
-    </label>
     <select id="speed">
       <option value="2">2× speed</option>
       <option value="8" selected>8× speed</option>
@@ -158,10 +155,13 @@
     <section id="visual">
       <h2>Room feed — visual context</h2>
       <div class="video-shell">
-        <video id="livevideo" autoplay muted playsinline></video>
+        <video id="livevideo" controls playsinline></video>
+        <iframe id="youtubevideo" title="Body-cam demo video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen></iframe>
         <div class="video-overlay">
-          <span class="video-state"><span id="videodot" class="video-dot"></span><span id="videostatus">Camera standby</span></span>
-          <span class="mono video-local">LOCAL</span>
+          <span class="video-state"><span id="videodot" class="video-dot"></span><span id="videostatus">Body-cam video loads for the real clip scenario</span></span>
+          <span class="mono video-local">VIDEO</span>
         </div>
       </div>
     </section>
@@ -184,7 +184,7 @@
 const TYPE_COLORS = { medication:"--med", rhythm_check:"--rhythm", shock:"--shock",
                       procedure:"--proc", assessment:"--assess", milestone:"--mile" };
 const events = {};          // id -> event
-let source = null, recordText = "", videoStream = null;
+let source = null, recordText = "";
 
 const $ = id => document.getElementById(id);
 const mmss = t => `${String(Math.floor(t/60)).padStart(2,"0")}:${String(Math.floor(t%60)).padStart(2,"0")}`;
@@ -196,31 +196,36 @@ function append(container, el) {
   box.scrollTop = box.scrollHeight;
 }
 
-async function startCamera() {
-  if (!$("camera").checked || !navigator.mediaDevices?.getUserMedia) {
-    stopCamera("Camera off");
+async function configureVideo(scenario, autoplay = false) {
+  const local = $("livevideo");
+  const youtube = $("youtubevideo");
+  local.pause();
+  local.removeAttribute("src");
+  local.load();
+  youtube.removeAttribute("src");
+  local.style.display = "none";
+  youtube.style.display = "none";
+  $("videodot").classList.remove("on");
+
+  if (scenario === "live-bodycam") {
+    const localVideo = await fetch("/media/bodycam-video", { method: "HEAD" });
+    if (localVideo.ok) {
+      local.src = "/media/bodycam-video";
+      local.muted = true;
+      local.style.display = "block";
+      $("videodot").classList.add("on");
+      $("videostatus").textContent = "Local body-cam clip ready";
+      if (autoplay) local.play().catch(() => {});
+      return;
+    }
+    youtube.src = `https://www.youtube.com/embed/p_Fp2hhUPK8?rel=0${autoplay ? "&autoplay=1&mute=1" : ""}`;
+    youtube.style.display = "block";
+    $("videodot").classList.add("on");
+    $("videostatus").textContent = "Body-cam clip ready from YouTube";
     return;
   }
-  try {
-    videoStream?.getTracks().forEach(track => track.stop());
-    videoStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false
-    });
-    $("livevideo").srcObject = videoStream;
-    $("videodot").classList.add("on");
-    $("videostatus").textContent = "Camera live";
-  } catch (err) {
-    stopCamera("Camera unavailable");
-  }
-}
 
-function stopCamera(label = "Camera standby") {
-  videoStream?.getTracks().forEach(track => track.stop());
-  videoStream = null;
-  $("livevideo").srcObject = null;
-  $("videodot").classList.remove("on");
-  $("videostatus").textContent = label;
+  $("videostatus").textContent = "Video is available in the real body-cam clip scenario";
 }
 
 function focusEvent(id) {
@@ -345,7 +350,6 @@ $("download").onclick = () => {
 
 $("start").onclick = () => {
   source?.close();
-  startCamera();
   $("timeline").innerHTML = ""; $("guidance").innerHTML = "";
   $("rubrics").innerHTML = "";
   $("recordwrap").style.display = "none";
@@ -354,6 +358,7 @@ $("start").onclick = () => {
   $("start").textContent = "↻ Restart";
 
   const scen = $("scenario").value;
+  configureVideo(scen, true);
   const live = scen.startsWith("live");
   $("asrbar").style.display = live ? "block" : "none";
   $("asrtext").textContent = "—";
@@ -381,8 +386,8 @@ $("start").onclick = () => {
   };
   source.onerror = () => source.close();
 };
-
-$("camera").onchange = () => $("camera").checked ? startCamera() : stopCamera("Camera off");
+configureVideo($("scenario").value);
+$("scenario").onchange = () => configureVideo($("scenario").value);
 </script>
 </body>
 </html>

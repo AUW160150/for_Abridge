@@ -16,7 +16,7 @@ import os
 import time
 from datetime import timedelta
 
-from flask import Flask, Response, request, send_from_directory
+from flask import Flask, Response, abort, request, send_file, send_from_directory
 
 from pathlib import Path
 
@@ -48,6 +48,19 @@ def record_page():
 @app.route("/rubrics")
 def rubrics_page():
     return send_from_directory("static", "rubrics.html")
+
+
+@app.route("/media/bodycam-video")
+def bodycam_video():
+    for path in (
+        Path("data/private/bodycam.mp4"),
+        Path("data/private/bodycam.webm"),
+        Path("data/bodycam.mp4"),
+        Path("static/bodycam.mp4"),
+    ):
+        if path.exists():
+            return send_file(path, conditional=True)
+    abort(404)
 
 
 @app.route("/api/record")

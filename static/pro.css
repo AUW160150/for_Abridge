@@ -305,15 +305,24 @@ table,
   padding: 4px 16px 28px;
 }
 
-#livevideo {
+#livevideo,
+#youtubevideo {
   width: 100%;
   height: 100%;
   min-height: 280px;
-  object-fit: cover;
   background: linear-gradient(135deg, #dfe7ee, #f8fafc);
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
+}
+
+#livevideo {
+  object-fit: cover;
+}
+
+#youtubevideo {
+  display: none;
+  aspect-ratio: 16 / 9;
 }
 
 .video-overlay {
