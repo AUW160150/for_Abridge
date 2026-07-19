@@ -125,7 +125,7 @@
     <div id="status" class="pill idle">standby</div>
     <div id="rubrics"></div>
     <div class="spacer"></div>
-    <a href="/record" class="hint" style="text-decoration:none">code record ↗</a>
+    <a id="recordlink" href="/record?scenario=arrest" class="hint" style="text-decoration:none">code record ↗</a>
     <a href="/rubrics" class="hint" style="text-decoration:none">rubrics &amp; eval ↗</a>
     <span class="hint">video first; run audio when ready</span>
     <select id="scenario">
@@ -377,6 +377,12 @@ function showRecord(r) {
   $("recordwrap").style.display = "block";
 }
 
+function setRecordScenario(scenario) {
+  const recordScenario = scenario === "stroke" ? "stroke" : scenario.startsWith("live") ? "live" : "arrest";
+  $("recordlink").href = `/record?scenario=${recordScenario}`;
+  try { localStorage.setItem("codeclock_record_scenario", recordScenario); } catch (_) {}
+}
+
 $("download").onclick = () => {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([recordText], { type: "text/plain" }));
@@ -434,6 +440,7 @@ $("micstart").onclick = () => {
 
 function startScenario(scen, speed, autoplayMedia, mediaScenario = scen) {
   pauseDemo();
+  setRecordScenario(scen);
   $("timeline").innerHTML = ""; $("guidance").innerHTML = "";
   $("rubrics").innerHTML = "";
   $("recordwrap").style.display = "none";
@@ -476,10 +483,12 @@ $("reload").onclick = () => startScenario($("scenario").value, $("speed").value,
 $("quick").onclick = () => {
   pauseDemo();
   $("speed").value = "20";
+  setRecordScenario("arrest");
   startScenario("arrest", "20", false, "live-bodycam");
 };
 configureMedia($("scenario").value);
 $("scenario").onchange = () => configureMedia($("scenario").value);
+setRecordScenario("arrest");
 setupSplitter();
 </script>
 </body>

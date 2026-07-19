@@ -45,9 +45,9 @@
 
   <div class="bar">
     <select id="scenario">
-      <option value="live">Live session (latest)</option>
       <option value="arrest">Cardiac arrest (replay)</option>
       <option value="stroke">Stroke → arrest (replay)</option>
+      <option value="live">Live session (latest)</option>
     </select>
     <button id="load">Load record</button>
     <span class="note" id="summary"></span>
@@ -79,6 +79,10 @@ const review = {};   // event id -> "confirmed" | "flagged"
 async function load() {
   const res = await fetch(`/api/record?scenario=${$("scenario").value}`);
   data = await res.json();
+  if ($("scenario").value === "live" && data.totals.events === 0) {
+    $("scenario").value = "arrest";
+    return load();
+  }
   $("summary").textContent =
     `${data.totals.events} events · ${data.totals.guidance} prompts · ` +
     `${data.alerts.length} alerts · ${data.totals.low_confidence} low-confidence to review`;
@@ -149,6 +153,11 @@ function dl(content, name, type) {
 $("load").onclick = load;
 $("export").onclick = () => exportRecord("json");
 $("exporttxt").onclick = () => exportRecord("txt");
+const params = new URLSearchParams(location.search);
+const initialScenario = params.get("scenario") || localStorage.getItem("codeclock_record_scenario") || "arrest";
+if ([...$("scenario").options].some(o => o.value === initialScenario)) {
+  $("scenario").value = initialScenario;
+}
 load();
 </script>
 </body>
