@@ -141,6 +141,9 @@
     <label class="hint" style="display:flex;align-items:center;gap:4px">
       <input type="checkbox" id="speak"> voice alerts
     </label>
+    <label class="hint" style="display:flex;align-items:center;gap:4px">
+      <input type="checkbox" id="camera" checked> camera
+    </label>
     <select id="speed">
       <option value="2">2× speed</option>
       <option value="8" selected>8× speed</option>
@@ -152,6 +155,16 @@
   <div id="asrbar"><b>HEARD</b> <span id="asrtext">—</span></div>
 
   <main>
+    <section id="visual">
+      <h2>Room feed — visual context</h2>
+      <div class="video-shell">
+        <video id="livevideo" autoplay muted playsinline></video>
+        <div class="video-overlay">
+          <span class="video-state"><span id="videodot" class="video-dot"></span><span id="videostatus">Camera standby</span></span>
+          <span class="mono video-local">LOCAL</span>
+        </div>
+      </div>
+    </section>
     <section>
       <h2>Event timeline — hands-free</h2>
       <div class="scroll" id="timeline"><div class="empty">Press “Start code” to begin the replay.</div></div>
@@ -171,7 +184,7 @@
 const TYPE_COLORS = { medication:"--med", rhythm_check:"--rhythm", shock:"--shock",
                       procedure:"--proc", assessment:"--assess", milestone:"--mile" };
 const events = {};          // id -> event
-let source = null, recordText = "";
+let source = null, recordText = "", videoStream = null;
 
 const $ = id => document.getElementById(id);
 const mmss = t => `${String(Math.floor(t/60)).padStart(2,"0")}:${String(Math.floor(t%60)).padStart(2,"0")}`;
@@ -181,6 +194,49 @@ function append(container, el) {
   box.querySelector(".empty")?.remove();
   box.appendChild(el);
   box.scrollTop = box.scrollHeight;
+}
+
+async function startCamera() {
+  if (!$("camera").checked || !navigator.mediaDevices?.getUserMedia) {
+    stopCamera("Camera off");
+    return;
+  }
+  try {
+    videoStream?.getTracks().forEach(track => track.stop());
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false
+    });
+    $("livevideo").srcObject = videoStream;
+    $("videodot").classList.add("on");
+    $("videostatus").textContent = "Camera live";
+  } catch (err) {
+    stopCamera("Camera unavailable");
+  }
+}
+
+function stopCamera(label = "Camera standby") {
+  videoStream?.getTracks().forEach(track => track.stop());
+  videoStream = null;
+  $("livevideo").srcObject = null;
+  $("videodot").classList.remove("on");
+  $("videostatus").textContent = label;
+}
+
+function focusEvent(id) {
+  const el = $(id);
+  if (!el) return;
+  el.classList.add("open", "focused");
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => el.classList.remove("focused"), 1800);
+}
+
+function evidenceLinks(triggers) {
+  return triggers.map(t => `
+    <a class="evidence-link" href="#${t.id}" data-event="${t.id}">
+      <span class="mono">${mmss(t.t)}</span>
+      <span>“${t.source}”</span>
+    </a>`).join("");
 }
 
 function addEvent(e) {
@@ -224,9 +280,13 @@ function addRubric(r) {
     <div class="details">
       <div class="label">evidence</div>
       <div>${r.reason}</div>
-      ${triggers.map(t => `<div class="quote">[${mmss(t.t)}] “${t.source}”</div>`).join("")}
+      ${evidenceLinks(triggers)}
     </div>`;
-  el.onclick = () => el.classList.toggle("open");
+  el.onclick = ev => {
+    const link = ev.target.closest(".evidence-link");
+    if (link) { ev.preventDefault(); focusEvent(link.dataset.event); return; }
+    el.classList.toggle("open");
+  };
   append("guidance", el);
 }
 
@@ -249,10 +309,14 @@ function addGuidance(g) {
       <div>${g.rule_source}</div>
       <div class="label">${triggers.length ? "triggered by — exact utterances heard" : "triggered by"}</div>
       ${triggers.length
-        ? triggers.map(t => `<div class="quote">[${mmss(t.t)}] “${t.source}”</div>`).join("")
+        ? evidenceLinks(triggers)
         : `<div>elapsed-time rule (clock-driven)</div>`}
     </div>`;
-  el.onclick = () => el.classList.toggle("open");
+  el.onclick = ev => {
+    const link = ev.target.closest(".evidence-link");
+    if (link) { ev.preventDefault(); focusEvent(link.dataset.event); return; }
+    el.classList.toggle("open");
+  };
   append("guidance", el);
 }
 
@@ -281,6 +345,7 @@ $("download").onclick = () => {
 
 $("start").onclick = () => {
   source?.close();
+  startCamera();
   $("timeline").innerHTML = ""; $("guidance").innerHTML = "";
   $("rubrics").innerHTML = "";
   $("recordwrap").style.display = "none";
@@ -316,6 +381,8 @@ $("start").onclick = () => {
   };
   source.onerror = () => source.close();
 };
+
+$("camera").onchange = () => $("camera").checked ? startCamera() : stopCamera("Camera off");
 </script>
 </body>
 </html>
