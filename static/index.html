@@ -145,6 +145,7 @@
       <option value="60">60× speed</option>
     </select>
     <button id="start">Load audio</button>
+    <button id="micstart">Start microphone</button>
     <button id="pause">Pause</button>
     <button id="reload">Reload</button>
     <button id="quick">Quick result</button>
@@ -424,6 +425,11 @@ function setupSplitter() {
 $("start").onclick = () => {
   const scen = $("scenario").value === "arrest" ? "live-bodycam" : $("scenario").value;
   startScenario(scen, $("speed").value, true);
+};
+
+$("micstart").onclick = () => {
+  $("scenario").value = "live-mic";
+  startScenario("live-mic", "1", false);
 };
 
 function startScenario(scen, speed, autoplayMedia, mediaScenario = scen) {
