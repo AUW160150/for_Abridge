@@ -263,6 +263,28 @@ table,
   color: #101826;
 }
 
+.why-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px dotted var(--muted);
+  color: var(--blue);
+  cursor: help;
+}
+
+.why-tip::after {
+  content: "?";
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #eef3f7;
+  color: var(--dim);
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .g-item.alert {
   background: #fff5f5;
   border-color: #ecc2c2;

@@ -349,7 +349,7 @@ function addGuidance(g) {
       <div class="label">${triggers.length ? "triggered by — exact utterances heard" : "triggered by"}</div>
       ${triggers.length
         ? evidenceLinks(triggers)
-        : `<div>elapsed-time rule (clock-driven)</div>`}
+        : `<div><span class="why-tip" title="The reasoning came from protocol time, not a new utterance.">elapsed-time rule (clock-driven)</span></div>`}
     </div>`;
   el.onclick = ev => {
     const link = ev.target.closest(".evidence-link");
