@@ -12,6 +12,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import time
 from datetime import timedelta
 
@@ -26,7 +27,7 @@ from run_pipeline import load_or_extract
 
 app = Flask(__name__, static_folder="static")
 
-PORT = 5057
+PORT = int(os.environ.get("PORT", "5057"))
 
 SCENARIOS = {
     "arrest": (Path("data/transcript.txt"), Path("data/events.json")),
