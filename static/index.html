@@ -136,9 +136,6 @@
       <option value="live-mic">● LIVE — microphone</option>
     </select>
     <label class="hint" style="display:flex;align-items:center;gap:4px">
-      <input type="checkbox" id="listen"> server audio
-    </label>
-    <label class="hint" style="display:flex;align-items:center;gap:4px">
       <input type="checkbox" id="speak"> voice alerts
     </label>
     <select id="speed">
@@ -231,6 +228,11 @@ async function configureMedia(scenario, autoplay = false) {
   $("videodot").classList.remove("on");
 
   if (scenario === "live-bodycam") {
+    audio.src = "/media/audio/bodycam";
+    if (autoplay) audio.play().catch(() => {
+      $("videostatus").textContent = "Use the audio control below to play sound";
+    });
+
     const localVideo = await fetch("/media/bodycam-video", { method: "HEAD" });
     if (localVideo.ok) {
       local.src = "/media/bodycam-video";
@@ -245,14 +247,14 @@ async function configureMedia(scenario, autoplay = false) {
       $("videodot").classList.add("on");
       $("videostatus").textContent = "Body-cam clip ready from YouTube";
     }
-    audio.src = "/media/audio/bodycam";
-    if (autoplay) audio.play().catch(() => {});
     return;
   }
 
   if (scenario === "live-file") {
     audio.src = "/media/audio/transcript_x3";
-    if (autoplay) audio.play().catch(() => {});
+    if (autoplay) audio.play().catch(() => {
+      $("videostatus").textContent = "Use the audio control below to play sound";
+    });
     $("videostatus").textContent = "Demo audio ready";
     return;
   }
@@ -403,7 +405,7 @@ function startScenario(scen, speed, autoplayMedia, mediaScenario = scen) {
   const url = live
     ? `/api/stream?scenario=live&source=${scen === "live-mic" ? "mic" : "file"}` +
       `&audio=${audio}&speak=${$("speak").checked ? 1 : 0}` +
-      `&listen=${$("listen").checked ? 1 : 0}`
+      `&listen=0`
     : `/api/stream?speed=${speed}&scenario=${scen}`;
   source = new EventSource(url);
   source.onmessage = msg => {

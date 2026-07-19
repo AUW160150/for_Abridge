@@ -42,8 +42,15 @@ a { color: var(--blue); }
 a:hover { color: var(--text); }
 
 header {
-  min-height: 72px;
-  padding: 12px 18px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 0;
+  height: auto;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, .96);
   border-bottom: 1px solid var(--line);
   box-shadow: 0 1px 14px rgba(24, 34, 48, .06);
@@ -56,13 +63,18 @@ body > h1 {
   letter-spacing: .04em;
 }
 
+header h1 {
+  font-size: 13px;
+  min-width: 72px;
+}
+
 header h1 span,
 body > h1 span { color: var(--alert); }
 
 #clock {
-  min-width: 108px;
+  min-width: 78px;
   color: #101826;
-  font-size: 32px;
+  font-size: 24px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -94,7 +106,7 @@ button,
 input[type=text],
 input,
 textarea {
-  min-height: 34px;
+  min-height: 30px;
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--line);
@@ -104,6 +116,16 @@ textarea {
 
 button {
   font-weight: 700;
+}
+
+header select,
+header button {
+  max-width: 260px;
+  padding: 5px 9px;
+}
+
+header .hint {
+  line-height: 1.2;
 }
 
 button:hover,
@@ -285,6 +307,12 @@ table,
 #recordwrap {
   background: rgba(255, 255, 255, .96);
   border-color: var(--line);
+}
+
+#asrbar {
+  position: sticky;
+  top: var(--header-height, 56px);
+  z-index: 19;
 }
 
 #asrbar b {
